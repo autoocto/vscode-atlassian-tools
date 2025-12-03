@@ -1,0 +1,367 @@
+{
+  "name": "atlassian-tools",
+  "displayName": "Atlassian Tools",
+  "description": "Interact with Jira tickets and Confluence pages in Copilot chat",
+  "version": "0.1.0",
+  "publisher": "autoocto",
+  "repository": "https://github.com/autoocto/vscode-atlassian-tools",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Chat",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguageModelTool:getJiraIssue",
+    "onLanguageModelTool:searchJiraIssues",
+    "onLanguageModelTool:getJiraIssueLinks",
+    "onLanguageModelTool:gatherJiraIssueContext",
+    "onLanguageModelTool:createJiraComment",
+    "onLanguageModelTool:searchConfluencePages",
+    "onLanguageModelTool:getConfluencePage",
+    "onLanguageModelTool:createConfluencePage",
+    "onLanguageModelTool:updateConfluencePage",
+    "onLanguageModelTool:searchConfluenceByJiraKey"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Atlassian Tools",
+      "properties": {
+        "atlassianTools.atlassianBaseUrl": {
+          "type": "string",
+          "description": "Atlassian base URL (e.g., https://yourcompany.atlassian.net)",
+          "default": "",
+          "order": 1
+        },
+        "atlassianTools.atlassianEmail": {
+          "type": "string",
+          "description": "Atlassian email address",
+          "default": "",
+          "order": 2
+        },
+        "atlassianTools.atlassianApiToken": {
+          "type": "string",
+          "description": "Atlassian API token",
+          "default": "",
+          "order": 3
+        }
+      }
+    },
+    "languageModelTools": [
+      {
+        "name": "getJiraIssue",
+        "displayName": "Get Jira Issue",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraIssue",
+        "modelDescription": "Get details for a specific Jira issue by key. Returns summary, description, status, priority, assignee, reporter, and dates.",
+        "icon": "$(issue-opened)",
+        "tags": [
+          "jira",
+          "issue",
+          "ticket"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "searchJiraIssues",
+        "displayName": "Search Jira Issues",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "searchJiraIssues",
+        "modelDescription": "Search for Jira issues using JQL (Jira Query Language). Example: 'project = project_name AND status = \"In Progress\"'.",
+        "icon": "$(search)",
+        "tags": [
+          "jira",
+          "search",
+          "jql"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "jql": {
+              "type": "string",
+              "description": "JQL query string"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of results (default: 50)"
+            }
+          },
+          "required": [
+            "jql"
+          ]
+        }
+      },
+      {
+        "name": "getJiraIssueLinks",
+        "displayName": "Get Jira Issue Links",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraIssueLinks",
+        "modelDescription": "Get all linked issues (blocks, is blocked by, relates to, etc.) for a Jira ticket.",
+        "icon": "$(link)",
+        "tags": [
+          "jira",
+          "links"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "gatherJiraIssueContext",
+        "displayName": "Gather Jira Issue Context",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "gatherJiraIssueContext",
+        "modelDescription": "Gather comprehensive context for a Jira issue: main issue, sub-tasks, and linked issues. Useful for understanding full scope.",
+        "icon": "$(list-tree)",
+        "tags": [
+          "jira",
+          "context"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "createJiraComment",
+        "displayName": "Create Jira Comment",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "createJiraComment",
+        "modelDescription": "Add a comment to a Jira issue. Use this to document findings or link to Confluence pages.",
+        "icon": "$(comment)",
+        "tags": [
+          "jira",
+          "comment"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Comment text (supports Atlassian Document Format or plain text)"
+            }
+          },
+          "required": [
+            "issueKey",
+            "comment"
+          ]
+        }
+      },
+      {
+        "name": "searchConfluencePages",
+        "displayName": "Search Confluence Pages",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "searchConfluencePages",
+        "modelDescription": "Search for Confluence pages using CQL (Confluence Query Language). Example: 'type = page AND title ~ \"Test Plan\"'.",
+        "icon": "$(book)",
+        "tags": [
+          "confluence",
+          "search"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "cql": {
+              "type": "string",
+              "description": "CQL query string"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of results (default: 25)"
+            }
+          },
+          "required": [
+            "cql"
+          ]
+        }
+      },
+      {
+        "name": "getConfluencePage",
+        "displayName": "Get Confluence Page",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getConfluencePage",
+        "modelDescription": "Get a specific Confluence page by ID. Returns title, content, version, and space info.",
+        "icon": "$(file)",
+        "tags": [
+          "confluence",
+          "page"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pageId": {
+              "type": "string",
+              "description": "The Confluence page ID"
+            }
+          },
+          "required": [
+            "pageId"
+          ]
+        }
+      },
+      {
+        "name": "createConfluencePage",
+        "displayName": "Create Confluence Page",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "createConfluencePage",
+        "modelDescription": "Create a new Confluence page. Provide space key, title, content (HTML storage format), and optional parent page ID.",
+        "icon": "$(new-file)",
+        "tags": [
+          "confluence",
+          "create"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "spaceKey": {
+              "type": "string",
+              "description": "Confluence space key"
+            },
+            "title": {
+              "type": "string",
+              "description": "Page title"
+            },
+            "content": {
+              "type": "string",
+              "description": "Page content in Confluence storage format (HTML)"
+            },
+            "parentId": {
+              "type": "string",
+              "description": "Optional parent page ID"
+            }
+          },
+          "required": [
+            "spaceKey",
+            "title",
+            "content"
+          ]
+        }
+      },
+      {
+        "name": "updateConfluencePage",
+        "displayName": "Update Confluence Page",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "updateConfluencePage",
+        "modelDescription": "Update an existing Confluence page. Provide page ID, new title, new content, and current version number.",
+        "icon": "$(edit)",
+        "tags": [
+          "confluence",
+          "update"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pageId": {
+              "type": "string",
+              "description": "The Confluence page ID"
+            },
+            "title": {
+              "type": "string",
+              "description": "New page title"
+            },
+            "content": {
+              "type": "string",
+              "description": "New page content in Confluence storage format (HTML)"
+            },
+            "version": {
+              "type": "number",
+              "description": "Current version number (will be incremented)"
+            }
+          },
+          "required": [
+            "pageId",
+            "title",
+            "content",
+            "version"
+          ]
+        }
+      },
+      {
+        "name": "searchConfluenceByJiraKey",
+        "displayName": "Search Confluence by Jira Key",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "searchConfluenceByJiraKey",
+        "modelDescription": "Search Confluence pages that mention a specific Jira ticket key. Useful for finding test plans, documentation, and related pages.",
+        "icon": "$(link-external)",
+        "tags": [
+          "confluence",
+          "jira",
+          "search"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "jiraKey": {
+              "type": "string",
+              "description": "The Jira issue key to search for"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of results (default: 20)"
+            }
+          },
+          "required": [
+            "jiraKey"
+          ]
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "node -e \"require('child_process').spawnSync(process.execPath, [require('path').join(process.env.INIT_CWD || process.cwd(), 'node_modules/typescript/lib/tsc.js'), '-p', require('path').join(process.env.INIT_CWD || process.cwd(), 'tsconfig.json')], {stdio: 'inherit'})\"",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "pack": "vsce package",
+    "verify": "ts-node src/scripts/verifyConnectivity.ts",
+    "read-jira": "ts-node src/scripts/readJiraTicket.ts",
+    "create-confluence-draft": "ts-node src/scripts/createConfluenceDraft.ts",
+    "publish-confluence-draft": "ts-node src/scripts/publishConfluenceDraft.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.95.0",
+    "@typescript-eslint/eslint-plugin": "^7.x",
+    "@typescript-eslint/parser": "^7.x",
+    "eslint": "^8.x",
+    "typescript": "^5.x",
+    "ts-node": "^10.9.1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
+}
