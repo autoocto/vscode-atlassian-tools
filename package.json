@@ -2,7 +2,7 @@
   "name": "atlassian-tools",
   "displayName": "Atlassian Tools",
   "description": "Interact with Jira tickets and Confluence pages in Copilot chat",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "autoocto",
   "repository": "https://github.com/autoocto/vscode-atlassian-tools",
   "engines": {
@@ -18,6 +18,16 @@
     "onLanguageModelTool:getJiraIssueLinks",
     "onLanguageModelTool:gatherJiraIssueContext",
     "onLanguageModelTool:createJiraComment",
+    "onLanguageModelTool:addJiraWorklog",
+    "onLanguageModelTool:getJiraWorklogs",
+    "onLanguageModelTool:getJiraChangelog",
+    "onLanguageModelTool:bulkFetchJiraIssues",
+    "onLanguageModelTool:getJiraCreateMetadata",
+    "onLanguageModelTool:findJiraAssignableUsers",
+    "onLanguageModelTool:getJiraComments",
+    "onLanguageModelTool:createJiraIssueLink",
+    "onLanguageModelTool:getJiraWatchers",
+    "onLanguageModelTool:addJiraWatcher",
     "onLanguageModelTool:searchConfluencePages",
     "onLanguageModelTool:getConfluencePage",
     "onLanguageModelTool:createConfluencePage",
@@ -178,6 +188,327 @@
           "required": [
             "issueKey",
             "comment"
+          ]
+        }
+      },
+      {
+        "name": "addJiraWorklog",
+        "displayName": "Add Jira Worklog",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "addJiraWorklog",
+        "modelDescription": "Log time spent on a Jira issue. Provide time in format like '3h 30m', '2d 4h', '1w 2d'.",
+        "icon": "$(watch)",
+        "tags": [
+          "jira",
+          "worklog",
+          "time"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "timeSpent": {
+              "type": "string",
+              "description": "Time spent (e.g., '3h 30m', '2d 4h', '1w')"
+            },
+            "started": {
+              "type": "string",
+              "description": "ISO 8601 date-time when work started (optional, defaults to now)"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment for the worklog entry"
+            }
+          },
+          "required": [
+            "issueKey",
+            "timeSpent"
+          ]
+        }
+      },
+      {
+        "name": "getJiraWorklogs",
+        "displayName": "Get Jira Worklogs",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraWorklogs",
+        "modelDescription": "Get all time tracking worklogs for a Jira issue. Returns time spent, dates, and comments.",
+        "icon": "$(history)",
+        "tags": [
+          "jira",
+          "worklog",
+          "time"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of worklogs to return (default: 1000)"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "getJiraChangelog",
+        "displayName": "Get Jira Changelog",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraChangelog",
+        "modelDescription": "Get change history for a Jira issue. Shows who changed what fields and when.",
+        "icon": "$(git-commit)",
+        "tags": [
+          "jira",
+          "history",
+          "audit"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of changelog entries (default: 100)"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "bulkFetchJiraIssues",
+        "displayName": "Bulk Fetch Jira Issues",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "bulkFetchJiraIssues",
+        "modelDescription": "Fetch multiple Jira issues by keys in a single request. More efficient than multiple getIssue calls.",
+        "icon": "$(list-flat)",
+        "tags": [
+          "jira",
+          "bulk",
+          "issues"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Array of issue keys to fetch"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional fields to return (default: all)"
+            }
+          },
+          "required": [
+            "issueKeys"
+          ]
+        }
+      },
+      {
+        "name": "getJiraCreateMetadata",
+        "displayName": "Get Jira Create Metadata",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraCreateMetadata",
+        "modelDescription": "Get metadata for creating issues in projects (available fields, issue types, validation rules). Essential for dynamic issue creation forms.",
+        "icon": "$(symbol-property)",
+        "tags": [
+          "jira",
+          "metadata",
+          "fields"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional project keys to get metadata for"
+            },
+            "issueTypeNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional issue type names to filter"
+            }
+          }
+        }
+      },
+      {
+        "name": "findJiraAssignableUsers",
+        "displayName": "Find Assignable Users",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "findJiraAssignableUsers",
+        "modelDescription": "Search for users who can be assigned to issues. Use for user picker/autocomplete functionality.",
+        "icon": "$(person)",
+        "tags": [
+          "jira",
+          "user",
+          "search"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query (name or email)"
+            },
+            "project": {
+              "type": "string",
+              "description": "Optional project key to scope the search"
+            },
+            "issueKey": {
+              "type": "string",
+              "description": "Optional issue key to scope the search"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of users to return (default: 50)"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      {
+        "name": "getJiraComments",
+        "displayName": "Get Jira Comments",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraComments",
+        "modelDescription": "Get all comments for a Jira issue. Returns comment text, authors, and timestamps.",
+        "icon": "$(comment-discussion)",
+        "tags": [
+          "jira",
+          "comments"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of comments to return (default: 50)"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "createJiraIssueLink",
+        "displayName": "Create Jira Issue Link",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "createJiraIssueLink",
+        "modelDescription": "Create a link between two Jira issues. Link types include 'Blocks', 'Relates', 'Duplicates', etc.",
+        "icon": "$(link)",
+        "tags": [
+          "jira",
+          "link"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "inwardIssue": {
+              "type": "string",
+              "description": "The inward issue key (e.g., for 'Blocks', this is the blocked issue)"
+            },
+            "outwardIssue": {
+              "type": "string",
+              "description": "The outward issue key (e.g., for 'Blocks', this is the blocking issue)"
+            },
+            "linkType": {
+              "type": "string",
+              "description": "Link type name (e.g., 'Blocks', 'Relates', 'Duplicates')"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment for the link"
+            }
+          },
+          "required": [
+            "inwardIssue",
+            "outwardIssue",
+            "linkType"
+          ]
+        }
+      },
+      {
+        "name": "getJiraWatchers",
+        "displayName": "Get Jira Watchers",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraWatchers",
+        "modelDescription": "Get list of users watching a Jira issue (receiving notifications).",
+        "icon": "$(eye)",
+        "tags": [
+          "jira",
+          "watchers",
+          "notifications"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "addJiraWatcher",
+        "displayName": "Add Jira Watcher",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "addJiraWatcher",
+        "modelDescription": "Add a user as a watcher to a Jira issue (they will receive notifications).",
+        "icon": "$(eye-watch)",
+        "tags": [
+          "jira",
+          "watchers",
+          "notifications"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "accountId": {
+              "type": "string",
+              "description": "The Atlassian account ID of the user to add as watcher"
+            }
+          },
+          "required": [
+            "issueKey",
+            "accountId"
           ]
         }
       },
@@ -343,12 +674,13 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "node -e \"require('child_process').spawnSync(process.execPath, [require('path').join(process.env.INIT_CWD || process.cwd(), 'node_modules/typescript/lib/tsc.js'), '-p', require('path').join(process.env.INIT_CWD || process.cwd(), 'tsconfig.json')], {stdio: 'inherit'})\"",
+    "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "eslint src --ext ts",
     "pack": "vsce package",
     "verify": "ts-node src/scripts/verifyConnectivity.ts",
     "read-jira": "ts-node src/scripts/readJiraTicket.ts",
+    "test-new-tools": "ts-node src/scripts/testNewTools.ts",
     "create-confluence-draft": "ts-node src/scripts/createConfluenceDraft.ts",
     "publish-confluence-draft": "ts-node src/scripts/publishConfluenceDraft.ts"
   },

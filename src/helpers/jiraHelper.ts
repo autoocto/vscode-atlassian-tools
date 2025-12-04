@@ -355,4 +355,294 @@ export class JiraHelper {
         const endpoint = '/rest/api/3/project';
         return this.request<Array<{ key: string; name: string; id: string }>>(endpoint);
     }
+
+    // ===== WORKLOG MANAGEMENT =====
+
+    /**
+     * Add worklog entry (log time on issue)
+     */
+    async addWorklog(issueKey: string, timeSpent: string, started?: string, comment?: string): Promise<any> {
+        const body: any = {
+            timeSpent,
+            started: started || new Date().toISOString()
+        };
+        if (comment) {
+            body.comment = {
+                type: 'doc',
+                version: 1,
+                content: [{
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: comment }]
+                }]
+            };
+        }
+        return this.request(`/rest/api/3/issue/${issueKey}/worklog`, 'POST', body);
+    }
+
+    /**
+     * Get all worklogs for an issue
+     */
+    async getWorklogs(issueKey: string, startAt: number = 0, maxResults: number = 1000): Promise<any> {
+        const params = new URLSearchParams({
+            startAt: startAt.toString(),
+            maxResults: maxResults.toString()
+        });
+        return this.request(`/rest/api/3/issue/${issueKey}/worklog?${params.toString()}`);
+    }
+
+    /**
+     * Update a worklog entry
+     */
+    async updateWorklog(issueKey: string, worklogId: string, timeSpent: string, started?: string, comment?: string): Promise<any> {
+        const body: any = {
+            timeSpent,
+            started: started || new Date().toISOString()
+        };
+        if (comment) {
+            body.comment = {
+                type: 'doc',
+                version: 1,
+                content: [{
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: comment }]
+                }]
+            };
+        }
+        return this.request(`/rest/api/3/issue/${issueKey}/worklog/${worklogId}`, 'PUT', body);
+    }
+
+    /**
+     * Delete a worklog entry
+     */
+    async deleteWorklog(issueKey: string, worklogId: string): Promise<void> {
+        await this.request(`/rest/api/3/issue/${issueKey}/worklog/${worklogId}`, 'DELETE');
+    }
+
+    // ===== CHANGELOG & HISTORY =====
+
+    /**
+     * Get issue changelog (history of changes)
+     */
+    async getChangelog(issueKey: string, startAt: number = 0, maxResults: number = 100): Promise<any> {
+        const params = new URLSearchParams({
+            startAt: startAt.toString(),
+            maxResults: maxResults.toString()
+        });
+        return this.request(`/rest/api/3/issue/${issueKey}/changelog?${params.toString()}`);
+    }
+
+    // ===== BULK OPERATIONS =====
+
+    /**
+     * Bulk fetch multiple issues by key or ID
+     */
+    async bulkFetchIssues(issueKeys: string[], fields?: string[], expand?: string[]): Promise<any> {
+        const body: any = {
+            issueIdsOrKeys: issueKeys
+        };
+        if (fields) {
+            body.fields = fields;
+        }
+        if (expand) {
+            body.expand = expand.join(',');
+        }
+        return this.request('/rest/api/3/issue/bulkfetch', 'POST', body);
+    }
+
+    // ===== METADATA =====
+
+    /**
+     * Get create metadata for projects (fields, types, etc.)
+     */
+    async getCreateMetadata(projectKeys?: string[], issueTypeNames?: string[]): Promise<any> {
+        const params = new URLSearchParams();
+        if (projectKeys) {
+            params.append('projectKeys', projectKeys.join(','));
+        }
+        if (issueTypeNames) {
+            params.append('issuetypeNames', issueTypeNames.join(','));
+        }
+        params.append('expand', 'projects.issuetypes.fields');
+        return this.request(`/rest/api/3/issue/createmeta?${params.toString()}`);
+    }
+
+    /**
+     * Get edit metadata for an issue
+     */
+    async getEditMetadata(issueKey: string): Promise<any> {
+        return this.request(`/rest/api/3/issue/${issueKey}/editmeta`);
+    }
+
+    // ===== USER SEARCH =====
+
+    /**
+     * Find users assignable to issues
+     */
+    async findAssignableUsers(query: string, project?: string, issueKey?: string, maxResults: number = 50): Promise<any[]> {
+        const params = new URLSearchParams({
+            query,
+            maxResults: maxResults.toString()
+        });
+        if (project) {
+            params.append('project', project);
+        }
+        if (issueKey) {
+            params.append('issueKey', issueKey);
+        }
+        return this.request(`/rest/api/3/user/assignable/search?${params.toString()}`);
+    }
+
+    /**
+     * Search for users
+     */
+    async searchUsers(query: string, maxResults: number = 50): Promise<any[]> {
+        const params = new URLSearchParams({
+            query,
+            maxResults: maxResults.toString()
+        });
+        return this.request(`/rest/api/3/user/search?${params.toString()}`);
+    }
+
+    // ===== COMMENTS MANAGEMENT =====
+
+    /**
+     * Get all comments for an issue
+     */
+    async getComments(issueKey: string, startAt: number = 0, maxResults: number = 50, orderBy?: string): Promise<any> {
+        const params = new URLSearchParams({
+            startAt: startAt.toString(),
+            maxResults: maxResults.toString()
+        });
+        if (orderBy) {
+            params.append('orderBy', orderBy);
+        }
+        return this.request(`/rest/api/3/issue/${issueKey}/comment?${params.toString()}`);
+    }
+
+    /**
+     * Update a comment
+     */
+    async updateComment(issueKey: string, commentId: string, comment: string): Promise<any> {
+        const body = {
+            body: {
+                type: 'doc',
+                version: 1,
+                content: [{
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: comment }]
+                }]
+            }
+        };
+        return this.request(`/rest/api/3/issue/${issueKey}/comment/${commentId}`, 'PUT', body);
+    }
+
+    /**
+     * Delete a comment
+     */
+    async deleteComment(issueKey: string, commentId: string): Promise<void> {
+        await this.request(`/rest/api/3/issue/${issueKey}/comment/${commentId}`, 'DELETE');
+    }
+
+    // ===== ATTACHMENTS =====
+
+    /**
+     * Get attachment metadata
+     */
+    async getAttachment(attachmentId: string): Promise<any> {
+        return this.request(`/rest/api/3/attachment/${attachmentId}`);
+    }
+
+    /**
+     * Delete an attachment
+     */
+    async deleteAttachment(attachmentId: string): Promise<void> {
+        await this.request(`/rest/api/3/attachment/${attachmentId}`, 'DELETE');
+    }
+
+    // ===== ISSUE LINKS =====
+
+    /**
+     * Create a link between two issues
+     */
+    async createIssueLink(inwardIssue: string, outwardIssue: string, linkType: string, comment?: string): Promise<any> {
+        const body: any = {
+            type: { name: linkType },
+            inwardIssue: { key: inwardIssue },
+            outwardIssue: { key: outwardIssue }
+        };
+        if (comment) {
+            body.comment = {
+                body: {
+                    type: 'doc',
+                    version: 1,
+                    content: [{
+                        type: 'paragraph',
+                        content: [{ type: 'text', text: comment }]
+                    }]
+                }
+            };
+        }
+        return this.request('/rest/api/3/issueLink', 'POST', body);
+    }
+
+    /**
+     * Delete an issue link
+     */
+    async deleteIssueLink(linkId: string): Promise<void> {
+        await this.request(`/rest/api/3/issueLink/${linkId}`, 'DELETE');
+    }
+
+    /**
+     * Get available issue link types
+     */
+    async getIssueLinkTypes(): Promise<any> {
+        return this.request('/rest/api/3/issueLinkType');
+    }
+
+    // ===== WATCHERS =====
+
+    /**
+     * Get watchers of an issue
+     */
+    async getWatchers(issueKey: string): Promise<any> {
+        return this.request(`/rest/api/3/issue/${issueKey}/watchers`);
+    }
+
+    /**
+     * Add watcher to an issue
+     */
+    async addWatcher(issueKey: string, accountId: string): Promise<void> {
+        await this.request(`/rest/api/3/issue/${issueKey}/watchers`, 'POST', `"${accountId}"`);
+    }
+
+    /**
+     * Remove watcher from an issue
+     */
+    async removeWatcher(issueKey: string, accountId: string): Promise<void> {
+        await this.request(`/rest/api/3/issue/${issueKey}/watchers?accountId=${accountId}`, 'DELETE');
+    }
+
+    // ===== PRIORITIES & STATUSES =====
+
+    /**
+     * Get all priorities
+     */
+    async getPriorities(): Promise<any[]> {
+        return this.request('/rest/api/3/priority');
+    }
+
+    /**
+     * Get all statuses
+     */
+    async getStatuses(): Promise<any[]> {
+        return this.request('/rest/api/3/status');
+    }
+
+    /**
+     * Get project details
+     */
+    async getProject(projectKey: string, expand?: string[]): Promise<any> {
+        const params = expand ? new URLSearchParams({ expand: expand.join(',') }) : null;
+        return this.request(`/rest/api/3/project/${projectKey}${params ? '?' + params.toString() : ''}`);
+    }
 }
