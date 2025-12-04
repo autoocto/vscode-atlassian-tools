@@ -71,9 +71,3 @@ Useful npm scripts in this repository:
 - `npm run create-confluence-draft` — run `src/scripts/createConfluenceDraft.ts`
 - `npm run publish-confluence-draft` — run `src/scripts/publishConfluenceDraft.ts`
 
-Examples:
-
-```bash
-npm run read-jira -- ticket_number
-```
-
