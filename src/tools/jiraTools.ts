@@ -273,6 +273,161 @@ export function registerJiraTools(context: vscode.ExtensionContext, helper: Jira
         }
     });
 
+    // Create Jira Issue Tool
+    const createJiraIssueTool = vscode.lm.registerTool('createJiraIssue', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ projectKey: string; summary: string; issueType?: string; description?: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { projectKey, summary, issueType = 'Task', description } = options.input;
+            try {
+                const issue = await helper.createIssue(projectKey, summary, issueType, description);
+                const formatted = formatJiraIssue(issue);
+                return createSuccessResult({ message: `Created issue ${issue.key}`, issue, formatted });
+            } catch (error) {
+                return handleToolError(error, `Failed to create Jira issue`);
+            }
+        }
+    });
+
+    // Update Jira Issue Tool
+    const updateJiraIssueTool = vscode.lm.registerTool('updateJiraIssue', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ issueKey: string; fields: any }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { issueKey, fields } = options.input;
+            try {
+                await helper.updateIssue(issueKey, fields);
+                return createSuccessResult({ message: `Updated issue ${issueKey}` });
+            } catch (error) {
+                return handleToolError(error, `Failed to update Jira issue ${issueKey}`);
+            }
+        }
+    });
+
+    // Get Jira Transitions Tool
+    const getJiraTransitionsTool = vscode.lm.registerTool('getJiraTransitions', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ issueKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { issueKey } = options.input;
+            try {
+                const result = await helper.getTransitions(issueKey);
+                return createSuccessResult({ transitions: result.transitions || [] });
+            } catch (error) {
+                return handleToolError(error, `Failed to get transitions for ${issueKey}`);
+            }
+        }
+    });
+
+    // Transition Jira Issue Tool
+    const transitionJiraIssueTool = vscode.lm.registerTool('transitionJiraIssue', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ issueKey: string; transitionId: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { issueKey, transitionId } = options.input;
+            try {
+                await helper.transitionIssue(issueKey, transitionId);
+                return createSuccessResult({ message: `Transitioned issue ${issueKey}` });
+            } catch (error) {
+                return handleToolError(error, `Failed to transition issue ${issueKey}`);
+            }
+        }
+    });
+
+    // Get Jira Project Tool
+    const getJiraProjectTool = vscode.lm.registerTool('getJiraProject', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ projectKey: string; expand?: string[] }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { projectKey, expand } = options.input;
+            try {
+                const project = await helper.getProject(projectKey, expand);
+                return createSuccessResult({ project });
+            } catch (error) {
+                return handleToolError(error, `Failed to get project ${projectKey}`);
+            }
+        }
+    });
+
+    // Assign Jira Issue Tool
+    const assignJiraIssueTool = vscode.lm.registerTool('assignJiraIssue', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ issueKey: string; accountId: string | null }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { issueKey, accountId } = options.input;
+            try {
+                await helper.assignIssue(issueKey, accountId);
+                const message = accountId ? `Assigned ${issueKey} to user` : `Unassigned ${issueKey}`;
+                return createSuccessResult({ message });
+            } catch (error) {
+                return handleToolError(error, `Failed to assign issue ${issueKey}`);
+            }
+        }
+    });
+
+    // Delete Jira Issue Tool
+    const deleteJiraIssueTool = vscode.lm.registerTool('deleteJiraIssue', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ issueKey: string; deleteSubtasks?: boolean }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { issueKey, deleteSubtasks = false } = options.input;
+            try {
+                await helper.deleteIssue(issueKey, deleteSubtasks);
+                return createSuccessResult({ message: `Deleted issue ${issueKey}` });
+            } catch (error) {
+                return handleToolError(error, `Failed to delete issue ${issueKey}`);
+            }
+        }
+    });
+
+    // Get Jira Issue Attachments Tool
+    const getJiraAttachmentsTool = vscode.lm.registerTool('getJiraAttachments', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ issueKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { issueKey } = options.input;
+            try {
+                const attachments = await helper.getIssueAttachments(issueKey);
+                return createSuccessResult({ attachments, count: attachments.length });
+            } catch (error) {
+                return handleToolError(error, `Failed to get attachments for ${issueKey}`);
+            }
+        }
+    });
+
+    // Get Jira Issue Votes Tool
+    const getJiraVotesTool = vscode.lm.registerTool('getJiraVotes', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ issueKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { issueKey } = options.input;
+            try {
+                const votes = await helper.getVotes(issueKey);
+                return createSuccessResult({ votes });
+            } catch (error) {
+                return handleToolError(error, `Failed to get votes for ${issueKey}`);
+            }
+        }
+    });
+
     context.subscriptions.push(
         getJiraIssueTool,
         searchJiraIssuesTool,
@@ -288,6 +443,15 @@ export function registerJiraTools(context: vscode.ExtensionContext, helper: Jira
         getCommentsTool,
         createIssueLinkTool,
         getWatchersTool,
-        addWatcherTool
+        addWatcherTool,
+        createJiraIssueTool,
+        updateJiraIssueTool,
+        getJiraTransitionsTool,
+        transitionJiraIssueTool,
+        getJiraProjectTool,
+        assignJiraIssueTool,
+        deleteJiraIssueTool,
+        getJiraAttachmentsTool,
+        getJiraVotesTool
     );
 }

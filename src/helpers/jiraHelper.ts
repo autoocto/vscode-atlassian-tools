@@ -22,9 +22,13 @@ export interface JiraIssue {
 
 export interface JiraSearchResult {
     issues: JiraIssue[];
-    total: number;
-    maxResults: number;
-    startAt: number;
+    total?: number; // Legacy API field
+    maxResults?: number; // Legacy API field
+    startAt?: number; // Legacy API field
+    isLast?: boolean; // New API field
+    nextPageToken?: string; // New API field
+    names?: Record<string, string>; // New API field
+    schema?: Record<string, any>; // New API field
 }
 
 export class JiraHelper {
@@ -96,7 +100,8 @@ export class JiraHelper {
         const params = new URLSearchParams({
             jql,
             maxResults: maxResults.toString(),
-            startAt: startAt.toString()
+            startAt: startAt.toString(),
+            fields: '*all' // Request all fields (new API defaults to 'id' only)
         });
         return this.request<JiraSearchResult>(`/rest/api/3/search/jql?${params.toString()}`);
     }
@@ -362,9 +367,22 @@ export class JiraHelper {
      * Add worklog entry (log time on issue)
      */
     async addWorklog(issueKey: string, timeSpent: string, started?: string, comment?: string): Promise<any> {
+        // Format date as Jira expects: yyyy-MM-dd'T'HH:mm:ss.SSSZ with numeric timezone
+        const formatDate = (date: Date): string => {
+            const offset = -date.getTimezoneOffset();
+            const sign = offset >= 0 ? '+' : '-';
+            const pad = (num: number) => String(Math.abs(num)).padStart(2, '0');
+            const hrs = pad(Math.floor(Math.abs(offset) / 60));
+            const mins = pad(Math.abs(offset) % 60);
+            
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T` +
+                   `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.` +
+                   `${String(date.getMilliseconds()).padStart(3, '0')}${sign}${hrs}${mins}`;
+        };
+
         const body: any = {
             timeSpent,
-            started: started || new Date().toISOString()
+            started: started || formatDate(new Date())
         };
         if (comment) {
             body.comment = {
@@ -644,5 +662,52 @@ export class JiraHelper {
     async getProject(projectKey: string, expand?: string[]): Promise<any> {
         const params = expand ? new URLSearchParams({ expand: expand.join(',') }) : null;
         return this.request(`/rest/api/3/project/${projectKey}${params ? '?' + params.toString() : ''}`);
+    }
+
+    // ===== ISSUE MANAGEMENT =====
+
+    /**
+     * Assign issue to a user
+     */
+    async assignIssue(issueKey: string, accountId: string | null): Promise<void> {
+        const body = accountId ? { accountId } : { accountId: null };
+        await this.request(`/rest/api/3/issue/${issueKey}/assignee`, 'PUT', body);
+    }
+
+    /**
+     * Delete an issue
+     */
+    async deleteIssue(issueKey: string, deleteSubtasks: boolean = false): Promise<void> {
+        const params = deleteSubtasks ? '?deleteSubtasks=true' : '';
+        await this.request(`/rest/api/3/issue/${issueKey}${params}`, 'DELETE');
+    }
+
+    /**
+     * Get attachments for an issue
+     */
+    async getIssueAttachments(issueKey: string): Promise<any[]> {
+        const issue = await this.getIssue(issueKey);
+        return issue.fields.attachment || [];
+    }
+
+    /**
+     * Get votes for an issue
+     */
+    async getVotes(issueKey: string): Promise<any> {
+        return this.request(`/rest/api/3/issue/${issueKey}/votes`);
+    }
+
+    /**
+     * Add vote to an issue
+     */
+    async addVote(issueKey: string): Promise<void> {
+        await this.request(`/rest/api/3/issue/${issueKey}/votes`, 'POST');
+    }
+
+    /**
+     * Remove vote from an issue
+     */
+    async removeVote(issueKey: string): Promise<void> {
+        await this.request(`/rest/api/3/issue/${issueKey}/votes`, 'DELETE');
     }
 }

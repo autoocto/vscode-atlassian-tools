@@ -234,4 +234,210 @@ export class ConfluenceHelper {
         const result: any = await this.request(endpoint);
         return result.results || [];
     }
+
+    /**
+     * Get comments for a Confluence page (v1 API - legacy)
+     */
+    async getPageComments(pageId: string, depth?: string, location?: string): Promise<any> {
+        const params = new URLSearchParams({
+            expand: 'body.view'
+        });
+        if (depth) {
+            params.append('depth', depth);
+        }
+        if (location) {
+            params.append('location', location);
+        }
+        return this.request(`/wiki/rest/api/content/${pageId}/child/comment?${params.toString()}`);
+    }
+
+    /**
+     * Delete a Confluence page
+     */
+    async deletePage(pageId: string): Promise<void> {
+        await this.request(`/wiki/rest/api/content/${pageId}`, 'DELETE');
+    }
+
+    // ===== COMMENT MANAGEMENT (v2 API) =====
+
+    /**
+     * Get footer comments for a page (v2 API)
+     */
+    async getPageFooterComments(pageId: string, sort?: string, limit: number = 25): Promise<any> {
+        const params = new URLSearchParams({
+            'page-id': pageId,
+            limit: limit.toString()
+        });
+        if (sort) {
+            params.append('sort', sort);
+        }
+        return this.request(`/wiki/api/v2/pages/${pageId}/footer-comments?${params.toString()}`);
+    }
+
+    /**
+     * Get inline comments for a page (v2 API)
+     */
+    async getPageInlineComments(pageId: string, sort?: string, limit: number = 25): Promise<any> {
+        const params = new URLSearchParams({
+            'page-id': pageId,
+            limit: limit.toString()
+        });
+        if (sort) {
+            params.append('sort', sort);
+        }
+        return this.request(`/wiki/api/v2/pages/${pageId}/inline-comments?${params.toString()}`);
+    }
+
+    /**
+     * Create a footer comment on a page (v2 API)
+     */
+    async createFooterComment(pageId: string, body: string, blogPostId?: string, parentCommentId?: string): Promise<any> {
+        const payload: any = {
+            body: {
+                representation: 'storage',
+                value: body
+            }
+        };
+
+        if (parentCommentId) {
+            payload.parentCommentId = parentCommentId;
+        } else if (blogPostId) {
+            payload.blogPostId = blogPostId;
+        } else {
+            payload.pageId = pageId;
+        }
+
+        return this.request('/wiki/api/v2/footer-comments', 'POST', payload);
+    }
+
+    /**
+     * Create an inline comment on a page (v2 API)
+     */
+    async createInlineComment(pageId: string, body: string, inlineProperties: any, parentCommentId?: string): Promise<any> {
+        const payload: any = {
+            body: {
+                representation: 'storage',
+                value: body
+            },
+            inlineCommentProperties: inlineProperties
+        };
+
+        if (parentCommentId) {
+            payload.parentCommentId = parentCommentId;
+        } else {
+            payload.pageId = pageId;
+        }
+
+        return this.request('/wiki/api/v2/inline-comments', 'POST', payload);
+    }
+
+    /**
+     * Update a footer comment (v2 API)
+     */
+    async updateFooterComment(commentId: string, body: string, version: number): Promise<any> {
+        const payload = {
+            body: {
+                representation: 'storage',
+                value: body
+            },
+            version: {
+                number: version + 1,
+                message: 'Updated comment'
+            }
+        };
+        return this.request(`/wiki/api/v2/footer-comments/${commentId}`, 'PUT', payload);
+    }
+
+    /**
+     * Update an inline comment (v2 API)
+     */
+    async updateInlineComment(commentId: string, body: string, version: number, resolutionStatus?: string): Promise<any> {
+        const payload: any = {
+            body: {
+                representation: 'storage',
+                value: body
+            },
+            version: {
+                number: version + 1,
+                message: 'Updated comment'
+            }
+        };
+
+        if (resolutionStatus) {
+            payload.resolutionStatus = resolutionStatus;
+        }
+
+        return this.request(`/wiki/api/v2/inline-comments/${commentId}`, 'PUT', payload);
+    }
+
+    /**
+     * Get a footer comment by ID (v2 API)
+     */
+    async getFooterComment(commentId: string): Promise<any> {
+        return this.request(`/wiki/api/v2/footer-comments/${commentId}?body-format=storage`);
+    }
+
+    /**
+     * Get an inline comment by ID (v2 API)
+     */
+    async getInlineComment(commentId: string): Promise<any> {
+        return this.request(`/wiki/api/v2/inline-comments/${commentId}?body-format=storage`);
+    }
+
+    /**
+     * Delete a footer comment (v2 API)
+     */
+    async deleteFooterComment(commentId: string): Promise<void> {
+        await this.request(`/wiki/api/v2/footer-comments/${commentId}`, 'DELETE');
+    }
+
+    /**
+     * Delete an inline comment (v2 API)
+     */
+    async deleteInlineComment(commentId: string): Promise<void> {
+        await this.request(`/wiki/api/v2/inline-comments/${commentId}`, 'DELETE');
+    }
+
+    /**
+     * Get children comments of a footer comment (replies) (v2 API)
+     */
+    async getFooterCommentChildren(commentId: string, sort?: string, limit: number = 25): Promise<any> {
+        const params = new URLSearchParams({
+            limit: limit.toString()
+        });
+        if (sort) {
+            params.append('sort', sort);
+        }
+        return this.request(`/wiki/api/v2/footer-comments/${commentId}/children?${params.toString()}`);
+    }
+
+    /**
+     * Get children comments of an inline comment (replies) (v2 API)
+     */
+    async getInlineCommentChildren(commentId: string, sort?: string, limit: number = 25): Promise<any> {
+        const params = new URLSearchParams({
+            limit: limit.toString()
+        });
+        if (sort) {
+            params.append('sort', sort);
+        }
+        return this.request(`/wiki/api/v2/inline-comments/${commentId}/children?${params.toString()}`);
+    }
+
+    /**
+     * Resolve an inline comment (v2 API)
+     * Resolution status can be: 'open', 'reopened', 'resolved', 'dangling'
+     */
+    async resolveInlineComment(commentId: string, version: number): Promise<any> {
+        const comment = await this.getInlineComment(commentId);
+        return this.updateInlineComment(commentId, comment.body.storage.value, version, 'resolved');
+    }
+
+    /**
+     * Reopen an inline comment (v2 API)
+     */
+    async reopenInlineComment(commentId: string, version: number): Promise<any> {
+        const comment = await this.getInlineComment(commentId);
+        return this.updateInlineComment(commentId, comment.body.storage.value, version, 'reopened');
+    }
 }

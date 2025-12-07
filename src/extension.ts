@@ -8,10 +8,8 @@ import { registerConfluenceTools } from './tools/confluenceTools';
 export function activate(context: vscode.ExtensionContext) {
     console.log('Atlassian Tools extension is now active');
 
-    // Load configuration
     const config = loadAtlassianConfig();
-    
-    // Create helper instances if config is valid
+
     const jiraHelper = config && validateAtlassianConfig(config) 
         ? new JiraHelper(config)
         : null;
@@ -24,7 +22,6 @@ export function activate(context: vscode.ExtensionContext) {
         console.warn('Atlassian Tools: Configuration not found or invalid. Please configure Jira and Confluence settings.');
     }
 
-    // Register all tools
     registerJiraTools(context, jiraHelper);
     registerConfluenceTools(context, confluenceHelper);
     

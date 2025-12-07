@@ -2,7 +2,7 @@
   "name": "atlassian-tools",
   "displayName": "Atlassian Tools",
   "description": "Interact with Jira tickets and Confluence pages in Copilot chat",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "autoocto",
   "repository": "https://github.com/autoocto/vscode-atlassian-tools",
   "engines": {
@@ -28,11 +28,31 @@
     "onLanguageModelTool:createJiraIssueLink",
     "onLanguageModelTool:getJiraWatchers",
     "onLanguageModelTool:addJiraWatcher",
+    "onLanguageModelTool:createJiraIssue",
+    "onLanguageModelTool:updateJiraIssue",
+    "onLanguageModelTool:getJiraTransitions",
+    "onLanguageModelTool:transitionJiraIssue",
+    "onLanguageModelTool:getJiraProject",
+    "onLanguageModelTool:assignJiraIssue",
+    "onLanguageModelTool:deleteJiraIssue",
+    "onLanguageModelTool:getJiraAttachments",
+    "onLanguageModelTool:getJiraVotes",
     "onLanguageModelTool:searchConfluencePages",
     "onLanguageModelTool:getConfluencePage",
     "onLanguageModelTool:createConfluencePage",
     "onLanguageModelTool:updateConfluencePage",
-    "onLanguageModelTool:searchConfluenceByJiraKey"
+    "onLanguageModelTool:searchConfluenceByJiraKey",
+    "onLanguageModelTool:getConfluencePageComments",
+    "onLanguageModelTool:deleteConfluencePage",
+    "onLanguageModelTool:createConfluenceFooterComment",
+    "onLanguageModelTool:updateConfluenceFooterComment",
+    "onLanguageModelTool:deleteConfluenceFooterComment",
+    "onLanguageModelTool:getConfluenceFooterComment",
+    "onLanguageModelTool:resolveConfluenceInlineComment",
+    "onLanguageModelTool:reopenConfluenceInlineComment",
+    "onLanguageModelTool:getConfluenceInlineComment",
+    "onLanguageModelTool:getConfluencePageFooterComments",
+    "onLanguageModelTool:getConfluencePageInlineComments"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -669,6 +689,595 @@
             "jiraKey"
           ]
         }
+      },
+      {
+        "name": "getConfluencePageComments",
+        "displayName": "Get Confluence Page Comments",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getConfluencePageComments",
+        "modelDescription": "Get all comments for a Confluence page. Returns comment text, authors, and timestamps.",
+        "icon": "$(comment-discussion)",
+        "tags": [
+          "confluence",
+          "comments"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pageId": {
+              "type": "string",
+              "description": "The Confluence page ID"
+            },
+            "depth": {
+              "type": "string",
+              "description": "Optional depth filter (e.g., 'all' or a number)"
+            },
+            "location": {
+              "type": "string",
+              "description": "Optional location filter"
+            }
+          },
+          "required": [
+            "pageId"
+          ]
+        }
+      },
+      {
+        "name": "deleteConfluencePage",
+        "displayName": "Delete Confluence Page",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "deleteConfluencePage",
+        "modelDescription": "Delete a Confluence page by ID. This action cannot be undone.",
+        "icon": "$(trash)",
+        "tags": [
+          "confluence",
+          "delete"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pageId": {
+              "type": "string",
+              "description": "The Confluence page ID to delete"
+            }
+          },
+          "required": [
+            "pageId"
+          ]
+        }
+      },
+      {
+        "name": "createJiraIssue",
+        "displayName": "Create Jira Issue",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "createJiraIssue",
+        "modelDescription": "Create a new Jira issue. Provide project key, summary, issue type (default: Task), and optional description.",
+        "icon": "$(add)",
+        "tags": [
+          "jira",
+          "create",
+          "issue"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKey": {
+              "type": "string",
+              "description": "The project key where the issue will be created"
+            },
+            "summary": {
+              "type": "string",
+              "description": "Issue summary/title"
+            },
+            "issueType": {
+              "type": "string",
+              "description": "Issue type (e.g., 'Task', 'Bug', 'Story'). Default: Task"
+            },
+            "description": {
+              "type": "string",
+              "description": "Optional issue description"
+            }
+          },
+          "required": [
+            "projectKey",
+            "summary"
+          ]
+        }
+      },
+      {
+        "name": "updateJiraIssue",
+        "displayName": "Update Jira Issue",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "updateJiraIssue",
+        "modelDescription": "Update fields of an existing Jira issue. Provide issue key and fields object with field names and values to update.",
+        "icon": "$(edit)",
+        "tags": [
+          "jira",
+          "update",
+          "issue"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "fields": {
+              "type": "object",
+              "description": "Object containing field names and values to update"
+            }
+          },
+          "required": [
+            "issueKey",
+            "fields"
+          ]
+        }
+      },
+      {
+        "name": "getJiraTransitions",
+        "displayName": "Get Jira Transitions",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraTransitions",
+        "modelDescription": "Get available transitions (status changes) for a Jira issue. Use this before transitioning an issue to find valid transition IDs.",
+        "icon": "$(arrow-swap)",
+        "tags": [
+          "jira",
+          "transitions",
+          "workflow"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "transitionJiraIssue",
+        "displayName": "Transition Jira Issue",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "transitionJiraIssue",
+        "modelDescription": "Change the status of a Jira issue by transitioning it. Use getJiraTransitions first to get valid transition IDs.",
+        "icon": "$(arrow-right)",
+        "tags": [
+          "jira",
+          "transition",
+          "workflow",
+          "status"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "transitionId": {
+              "type": "string",
+              "description": "The transition ID to execute"
+            }
+          },
+          "required": [
+            "issueKey",
+            "transitionId"
+          ]
+        }
+      },
+      {
+        "name": "getJiraProject",
+        "displayName": "Get Jira Project",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraProject",
+        "modelDescription": "Get details about a Jira project including components, versions, issue types, and roles.",
+        "icon": "$(project)",
+        "tags": [
+          "jira",
+          "project"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKey": {
+              "type": "string",
+              "description": "The Jira project key"
+            },
+            "expand": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional fields to expand (e.g., ['issueTypes', 'lead'])"
+            }
+          },
+          "required": [
+            "projectKey"
+          ]
+        }
+      },
+      {
+        "name": "assignJiraIssue",
+        "displayName": "Assign Jira Issue",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "assignJiraIssue",
+        "modelDescription": "Assign a Jira issue to a user by account ID. Set accountId to null to unassign.",
+        "icon": "$(person)",
+        "tags": [
+          "jira",
+          "assign",
+          "user"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            },
+            "accountId": {
+              "type": "string",
+              "description": "The Atlassian account ID of the user to assign (null to unassign)"
+            }
+          },
+          "required": [
+            "issueKey",
+            "accountId"
+          ]
+        }
+      },
+      {
+        "name": "deleteJiraIssue",
+        "displayName": "Delete Jira Issue",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "deleteJiraIssue",
+        "modelDescription": "Delete a Jira issue. Optionally delete all subtasks. This action cannot be undone.",
+        "icon": "$(trash)",
+        "tags": [
+          "jira",
+          "delete",
+          "issue"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key to delete"
+            },
+            "deleteSubtasks": {
+              "type": "boolean",
+              "description": "Whether to delete subtasks (default: false)"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "getJiraAttachments",
+        "displayName": "Get Jira Attachments",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraAttachments",
+        "modelDescription": "Get all attachments for a Jira issue. Returns attachment metadata including filename, size, and download URL.",
+        "icon": "$(file)",
+        "tags": [
+          "jira",
+          "attachments",
+          "files"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "getJiraVotes",
+        "displayName": "Get Jira Votes",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getJiraVotes",
+        "modelDescription": "Get vote information for a Jira issue including vote count and voters.",
+        "icon": "$(star)",
+        "tags": [
+          "jira",
+          "votes"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issueKey": {
+              "type": "string",
+              "description": "The Jira issue key"
+            }
+          },
+          "required": [
+            "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "createConfluenceFooterComment",
+        "displayName": "Create Confluence Footer Comment",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "createConfluenceFooterComment",
+        "modelDescription": "Create a footer comment on a Confluence page or reply to an existing comment. Uses Confluence v2 API.",
+        "icon": "$(comment)",
+        "tags": [
+          "confluence",
+          "comment",
+          "reply"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pageId": {
+              "type": "string",
+              "description": "The Confluence page ID"
+            },
+            "body": {
+              "type": "string",
+              "description": "Comment body content (HTML storage format)"
+            },
+            "parentCommentId": {
+              "type": "string",
+              "description": "Optional parent comment ID to create a reply"
+            }
+          },
+          "required": [
+            "pageId",
+            "body"
+          ]
+        }
+      },
+      {
+        "name": "updateConfluenceFooterComment",
+        "displayName": "Update Confluence Footer Comment",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "updateConfluenceFooterComment",
+        "modelDescription": "Update an existing footer comment. Uses Confluence v2 API.",
+        "icon": "$(edit)",
+        "tags": [
+          "confluence",
+          "comment",
+          "update"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "commentId": {
+              "type": "string",
+              "description": "The comment ID"
+            },
+            "body": {
+              "type": "string",
+              "description": "New comment body content (HTML storage format)"
+            },
+            "version": {
+              "type": "number",
+              "description": "Current version number of the comment"
+            }
+          },
+          "required": [
+            "commentId",
+            "body",
+            "version"
+          ]
+        }
+      },
+      {
+        "name": "deleteConfluenceFooterComment",
+        "displayName": "Delete Confluence Footer Comment",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "deleteConfluenceFooterComment",
+        "modelDescription": "Delete a footer comment. Uses Confluence v2 API.",
+        "icon": "$(trash)",
+        "tags": [
+          "confluence",
+          "comment",
+          "delete"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "commentId": {
+              "type": "string",
+              "description": "The comment ID to delete"
+            }
+          },
+          "required": [
+            "commentId"
+          ]
+        }
+      },
+      {
+        "name": "getConfluenceFooterComment",
+        "displayName": "Get Confluence Footer Comment",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getConfluenceFooterComment",
+        "modelDescription": "Get a specific footer comment by ID. Uses Confluence v2 API.",
+        "icon": "$(comment)",
+        "tags": [
+          "confluence",
+          "comment"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "commentId": {
+              "type": "string",
+              "description": "The comment ID"
+            }
+          },
+          "required": [
+            "commentId"
+          ]
+        }
+      },
+      {
+        "name": "resolveConfluenceInlineComment",
+        "displayName": "Resolve Confluence Inline Comment",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "resolveConfluenceInlineComment",
+        "modelDescription": "Resolve an inline comment by setting its resolution status to 'resolved'. Uses Confluence v2 API.",
+        "icon": "$(check)",
+        "tags": [
+          "confluence",
+          "comment",
+          "resolve"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "commentId": {
+              "type": "string",
+              "description": "The inline comment ID"
+            },
+            "version": {
+              "type": "number",
+              "description": "Current version number of the comment"
+            }
+          },
+          "required": [
+            "commentId",
+            "version"
+          ]
+        }
+      },
+      {
+        "name": "reopenConfluenceInlineComment",
+        "displayName": "Reopen Confluence Inline Comment",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "reopenConfluenceInlineComment",
+        "modelDescription": "Reopen a resolved inline comment by setting its resolution status to 'reopened'. Uses Confluence v2 API.",
+        "icon": "$(refresh)",
+        "tags": [
+          "confluence",
+          "comment",
+          "reopen"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "commentId": {
+              "type": "string",
+              "description": "The inline comment ID"
+            },
+            "version": {
+              "type": "number",
+              "description": "Current version number of the comment"
+            }
+          },
+          "required": [
+            "commentId",
+            "version"
+          ]
+        }
+      },
+      {
+        "name": "getConfluenceInlineComment",
+        "displayName": "Get Confluence Inline Comment",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getConfluenceInlineComment",
+        "modelDescription": "Get a specific inline comment by ID including its resolution status. Uses Confluence v2 API.",
+        "icon": "$(comment)",
+        "tags": [
+          "confluence",
+          "comment",
+          "inline"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "commentId": {
+              "type": "string",
+              "description": "The inline comment ID"
+            }
+          },
+          "required": [
+            "commentId"
+          ]
+        }
+      },
+      {
+        "name": "getConfluencePageFooterComments",
+        "displayName": "Get Confluence Page Footer Comments",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getConfluencePageFooterComments",
+        "modelDescription": "Get all footer comments for a Confluence page. Uses Confluence v2 API for better performance.",
+        "icon": "$(comment-discussion)",
+        "tags": [
+          "confluence",
+          "comments",
+          "page"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pageId": {
+              "type": "string",
+              "description": "The Confluence page ID"
+            },
+            "sort": {
+              "type": "string",
+              "description": "Optional sort order (e.g., 'created-date')"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of comments to return (default: 25)"
+            }
+          },
+          "required": [
+            "pageId"
+          ]
+        }
+      },
+      {
+        "name": "getConfluencePageInlineComments",
+        "displayName": "Get Confluence Page Inline Comments",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getConfluencePageInlineComments",
+        "modelDescription": "Get all inline comments for a Confluence page with resolution status. Uses Confluence v2 API for better performance.",
+        "icon": "$(comment-discussion)",
+        "tags": [
+          "confluence",
+          "comments",
+          "inline",
+          "page"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pageId": {
+              "type": "string",
+              "description": "The Confluence page ID"
+            },
+            "sort": {
+              "type": "string",
+              "description": "Optional sort order (e.g., 'created-date')"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of comments to return (default: 25)"
+            }
+          },
+          "required": [
+            "pageId"
+          ]
+        }
       }
     ]
   },
@@ -679,10 +1288,8 @@
     "lint": "eslint src --ext ts",
     "pack": "vsce package",
     "verify": "ts-node src/scripts/verifyConnectivity.ts",
-    "read-jira": "ts-node src/scripts/readJiraTicket.ts",
-    "test-new-tools": "ts-node src/scripts/testNewTools.ts",
-    "create-confluence-draft": "ts-node src/scripts/createConfluenceDraft.ts",
-    "publish-confluence-draft": "ts-node src/scripts/publishConfluenceDraft.ts"
+    "test-jira": "ts-node src/scripts/testJiraTools.ts",
+    "test-confluence": "ts-node src/scripts/testConfluenceTools.ts"
   },
   "devDependencies": {
     "@types/node": "^20.x",
