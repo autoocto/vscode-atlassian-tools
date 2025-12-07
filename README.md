@@ -4,19 +4,10 @@ Interact with Jira tickets and Confluence pages directly in GitHub Copilot chat.
 
 ## Features
 
-- **Jira Tools**
-  - Get Jira issue details
-  - Search issues using JQL
-  - Get issue links and relationships
-  - Gather comprehensive issue context (including sub-tasks and linked issues)
-  - Create comments on Jira tickets
-
-- **Confluence Tools**
-  - Search Confluence pages using CQL
-  - Get page content by ID
-  - Create new Confluence pages
-  - Update existing pages
-  - Search pages by Jira ticket key
+- **Atlassian integrations:** Connect to Jira and Confluence using a single set of credentials (base URL, email, API token).
+- **Jira:** Read and search issues (JQL), view changelogs, manage comments and worklogs, fetch attachments, manage watchers/votes, perform transitions and assignments, bulk-fetch issues, and access create/update metadata.
+- **Confluence:** Search pages (CQL), read/create/update/delete pages, and manage comments using both the v1 (page-level) and v2 (footer/inline) comment APIs (create, reply, update, delete, resolve, reopen).
+- **Developer tooling:** Built-in scripts to verify connectivity and run comprehensive integration tests for both Jira and Confluence language model tools.
 
 ## Configuration
 
@@ -40,17 +31,13 @@ Ask questions like:
 
 ### Language Model Tools
 
-The extension registers the following language model tools:
-- `getJiraIssue` - Get details for a specific Jira issue
-- `searchJiraIssues` - Search Jira using JQL
-- `getJiraIssueLinks` - Get linked issues
-- `gatherJiraIssueContext` - Get comprehensive context (main issue + sub-tasks + links)
-- `createJiraComment` - Add a comment to a ticket
-- `searchConfluencePages` - Search Confluence using CQL
-- `getConfluencePage` - Get page by ID
-- `createConfluencePage` - Create a new page
-- `updateConfluencePage` - Update an existing page
-- `searchConfluenceByJiraKey` - Find pages mentioning a Jira ticket
+This extension exposes a collection of language model tools registered in the extension manifest. The authoritative definitions (tool names, descriptions, and input schemas) live in `package.json` under `contributes.languageModelTools`.
+
+Major tool groups include:
+- **Jira tools:** issue read/search (JQL), comments, worklogs, changelogs, transitions, create/update/assign/delete, attachments, watchers and votes, bulk fetch, and create metadata.
+- **Confluence tools:** page search/read/create/update/delete and v2 comment management (footer & inline: create, reply, update, delete, resolve, reopen).
+
+Open `package.json` to view full tool definitions and input schemas.
 
 ## Development
 
@@ -67,7 +54,8 @@ Useful npm scripts in this repository:
 - `npm run compile` — compile TypeScript
 - `npm run watch` — run `tsc` in watch mode
 - `npm run verify` — run connectivity verification script (`src/scripts/verifyConnectivity.ts`)
-- `npm run read-jira -- <KEY>` — fetch and print a Jira ticket (`src/scripts/readJiraTicket.ts`)
-- `npm run create-confluence-draft` — run `src/scripts/createConfluenceDraft.ts`
-- `npm run publish-confluence-draft` — run `src/scripts/publishConfluenceDraft.ts`
+ - `npm run test-jira -- <ISSUE_KEY>` — run comprehensive Jira tool tests (`src/scripts/testJiraTools.ts`)
+ - `npm run test-confluence -- <PAGE_ID>` — run comprehensive Confluence tool tests (`src/scripts/testConfluenceTools.ts`)
+
+Changelog and release notes are available in `CHANGELOG.md`.
 
