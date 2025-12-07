@@ -63,24 +63,43 @@ export function registerConfluenceTools(context: vscode.ExtensionContext, helper
 
     // Update Confluence Page Tool
     const updateConfluencePageTool = vscode.lm.registerTool('updateConfluencePage', {
-        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ pageId: string; title: string; content: string; version: number | { number: number } }>, _token: vscode.CancellationToken) {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ pageId: string; title: string; content: string; version?: number }>, _token: vscode.CancellationToken) {
             if (!helper) {
                 return handleToolError(new Error('Confluence is not configured'));
             }
 
-            const { pageId, title, content, version: versionInput } = options.input;
-            // Handle both direct number and object format (LLM may pass { number: X })
-            const version = typeof versionInput === 'number' ? versionInput : (versionInput as any).number;
-            
-            if (typeof version !== 'number') {
-                return handleToolError(new Error('Version must be a number'));
-            }
+            const { pageId, title, content, version: providedVersion } = options.input;
 
             try {
+                // If version not provided or stale, fetch current version
+                let version = providedVersion;
+                if (!version) {
+                    const currentPage = await helper.getPage(pageId);
+                    version = currentPage.version?.number;
+                    if (!version) {
+                        throw new Error('Could not determine page version');
+                    }
+                }
+
                 const page = await helper.updatePage(pageId, title, content, version);
                 const formatted = formatConfluencePage(page);
                 return createSuccessResult({ message: `Page updated: ${title}`, page, formatted });
             } catch (error) {
+                // If version conflict, retry with fresh version
+                if (error instanceof Error && error.message.includes('Version must be incremented')) {
+                    try {
+                        const currentPage = await helper.getPage(pageId);
+                        const currentVersion = currentPage.version?.number;
+                        if (!currentVersion) {
+                            throw new Error('Could not determine current page version');
+                        }
+                        const page = await helper.updatePage(pageId, title, content, currentVersion);
+                        const formatted = formatConfluencePage(page);
+                        return createSuccessResult({ message: `Page updated: ${title} (auto-resolved version conflict)`, page, formatted });
+                    } catch (retryError) {
+                        return handleToolError(retryError, `Failed to update Confluence page ${pageId} after retry`);
+                    }
+                }
                 return handleToolError(error, `Failed to update Confluence page ${pageId}`);
             }
         }

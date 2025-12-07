@@ -2,7 +2,7 @@
   "name": "atlassian-tools",
   "displayName": "Atlassian Tools",
   "description": "Interact with Jira tickets and Confluence pages in Copilot chat",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "autoocto",
   "repository": "https://github.com/autoocto/vscode-atlassian-tools",
   "engines": {
@@ -627,7 +627,7 @@
         "displayName": "Update Confluence Page",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "updateConfluencePage",
-        "modelDescription": "Update an existing Confluence page. Provide page ID, new title, new content, and current version number.",
+        "modelDescription": "Update an existing Confluence page. Provide page ID, new title, and new content. The version is optional and will be auto-fetched if not provided or if there's a version conflict.",
         "icon": "$(edit)",
         "tags": [
           "confluence",
@@ -650,14 +650,13 @@
             },
             "version": {
               "type": "number",
-              "description": "Current version number (will be incremented)"
+              "description": "Optional: Current version number (will be auto-fetched if omitted or stale)"
             }
           },
           "required": [
             "pageId",
             "title",
-            "content",
-            "version"
+            "content"
           ]
         }
       },
@@ -1290,8 +1289,8 @@
     "verify": "ts-node src/scripts/verifyConnectivity.ts",
     "test-jira": "ts-node src/scripts/testJiraTools.ts",
     "test-confluence": "ts-node src/scripts/testConfluenceTools.ts",
-    "test-page": "ts-node private_test/testPageOperations.ts",
-    "test-inline": "ts-node private_test/testInlineCommentResolve.ts"
+    "test-page": "ts-node src/private_test/testPageOperations.ts",
+    "test-inline": "ts-node src/private_test/testInlineCommentResolve.ts"
   },
   "devDependencies": {
     "@types/node": "^20.x",
