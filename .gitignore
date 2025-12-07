@@ -4,3 +4,4 @@ out/
 *.vsix
 .env
 package-lock.json
+private_test/

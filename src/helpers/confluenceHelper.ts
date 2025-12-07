@@ -299,6 +299,7 @@ export class ConfluenceHelper {
             }
         };
 
+        // Specify ONE of: parentCommentId (for replies), blogPostId, or pageId
         if (parentCommentId) {
             payload.parentCommentId = parentCommentId;
         } else if (blogPostId) {

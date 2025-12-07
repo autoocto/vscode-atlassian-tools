@@ -63,12 +63,19 @@ export function registerConfluenceTools(context: vscode.ExtensionContext, helper
 
     // Update Confluence Page Tool
     const updateConfluencePageTool = vscode.lm.registerTool('updateConfluencePage', {
-        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ pageId: string; title: string; content: string; version: number }>, _token: vscode.CancellationToken) {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ pageId: string; title: string; content: string; version: number | { number: number } }>, _token: vscode.CancellationToken) {
             if (!helper) {
                 return handleToolError(new Error('Confluence is not configured'));
             }
 
-            const { pageId, title, content, version } = options.input;
+            const { pageId, title, content, version: versionInput } = options.input;
+            // Handle both direct number and object format (LLM may pass { number: X })
+            const version = typeof versionInput === 'number' ? versionInput : (versionInput as any).number;
+            
+            if (typeof version !== 'number') {
+                return handleToolError(new Error('Version must be a number'));
+            }
+
             try {
                 const page = await helper.updatePage(pageId, title, content, version);
                 const formatted = formatConfluencePage(page);
