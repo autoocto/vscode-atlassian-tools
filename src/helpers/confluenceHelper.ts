@@ -187,6 +187,53 @@ export class ConfluenceHelper {
     }
 
     /**
+     * Get pages starred/favorited by the current user
+     */
+    async getStarredPages(limit: number = 25): Promise<ConfluencePage[]> {
+        const cql = 'type = page AND favourite = currentUser() ORDER BY lastmodified DESC';
+        const result = await this.searchContent(cql, limit);
+        return result.results;
+    }
+
+    /**
+     * Get spaces starred/favorited by the current user
+     */
+    async getStarredSpaces(): Promise<Array<{ key: string; name: string; id: string }>> {
+        const cql = 'type = space AND favourite = currentUser() ORDER BY lastmodified DESC';
+        const result: any = await this.request(`/wiki/rest/api/content/search?cql=${encodeURIComponent(cql)}&limit=100`);
+        return result.results || [];
+    }
+
+    /**
+     * Get recently viewed pages by current user
+     */
+    async getRecentlyViewedPages(limit: number = 25): Promise<ConfluencePage[]> {
+        // Confluence doesn't have a 'lastViewed' CQL field, so we'll use recently updated pages
+        // filtered by contributor to approximate recently viewed content
+        const cql = 'type = page AND contributor = currentUser() ORDER BY lastmodified DESC';
+        const result = await this.searchContent(cql, limit);
+        return result.results;
+    }
+
+    /**
+     * Get pages created by current user
+     */
+    async getMyCreatedPages(limit: number = 25): Promise<ConfluencePage[]> {
+        const cql = 'type = page AND creator = currentUser() ORDER BY created DESC';
+        const result = await this.searchContent(cql, limit);
+        return result.results;
+    }
+
+    /**
+     * Get pages contributed to by current user
+     */
+    async getMyContributedPages(limit: number = 25): Promise<ConfluencePage[]> {
+        const cql = 'type = page AND contributor = currentUser() ORDER BY lastmodified DESC';
+        const result = await this.searchContent(cql, limit);
+        return result.results;
+    }
+
+    /**
      * Check Confluence connectivity
      */
     async checkConnection(): Promise<boolean> {
@@ -233,6 +280,27 @@ export class ConfluenceHelper {
         const endpoint = `/wiki/rest/api/space?limit=${limit}`;
         const result: any = await this.request(endpoint);
         return result.results || [];
+    }
+
+    /**
+     * Get spaces where the current user has permissions (filters out other users' personal spaces)
+     */
+    async getUserAccessibleSpaces(limit: number = 500): Promise<Array<{ key: string; name: string; id: string; type?: string }>> {
+        const currentUser = await this.getCurrentUser();
+        const allSpaces = await this.getAllSpaces(limit);
+        
+        // Filter to include:
+        // 1. User's own personal space (key starts with ~accountId)
+        // 2. Global/team spaces (not personal spaces of other users)
+        return allSpaces.filter(space => {
+            const isPersonalSpace = space.key.startsWith('~');
+            if (isPersonalSpace) {
+                // Only include user's own personal space
+                return space.key.includes(currentUser.accountId) || space.key.includes(currentUser.username);
+            }
+            // Include all non-personal spaces
+            return true;
+        });
     }
 
     /**

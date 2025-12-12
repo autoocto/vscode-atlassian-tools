@@ -9,12 +9,12 @@ export interface JiraIssue {
     fields: {
         summary: string;
         status: { name: string };
-        assignee?: { displayName: string; emailAddress: string };
+        assignee?: { displayName: string; emailAddress: string; accountId?: string };
         reporter?: { displayName: string; emailAddress: string };
         created: string;
         updated: string;
         description?: any;
-        priority?: { name: string };
+        priority?: { name: string; id?: string };
         issuetype?: { name: string };
         [key: string]: any;
     };
@@ -162,6 +162,14 @@ export class JiraHelper {
                 }]
             }
         };
+        return this.request(`/rest/api/3/issue/${issueKey}/comment`, 'POST', body);
+    }
+
+    /**
+     * Add a comment to an issue using ADF format
+     */
+    async addCommentADF(issueKey: string, adfContent: any): Promise<any> {
+        const body = { body: adfContent };
         return this.request(`/rest/api/3/issue/${issueKey}/comment`, 'POST', body);
     }
 
@@ -551,6 +559,14 @@ export class JiraHelper {
                 }]
             }
         };
+        return this.request(`/rest/api/3/issue/${issueKey}/comment/${commentId}`, 'PUT', body);
+    }
+
+    /**
+     * Update a comment using ADF format
+     */
+    async updateCommentADF(issueKey: string, commentId: string, adfContent: any): Promise<any> {
+        const body = { body: adfContent };
         return this.request(`/rest/api/3/issue/${issueKey}/comment/${commentId}`, 'PUT', body);
     }
 

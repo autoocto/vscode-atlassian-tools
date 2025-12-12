@@ -1,8 +1,8 @@
 {
   "name": "atlassian-tools",
   "displayName": "Atlassian Tools",
-  "description": "Interact with Jira tickets and Confluence pages in Copilot chat",
-  "version": "0.1.4",
+  "description": "Manage Jira issues and Confluence pages with integrated UI, YAML editing, and Copilot chat support",
+  "version": "0.2.1",
   "publisher": "autoocto",
   "repository": "https://github.com/autoocto/vscode-atlassian-tools",
   "engines": {
@@ -79,6 +79,174 @@
         }
       }
     },
+    "views": {
+      "explorer": [
+        {
+          "id": "jiraTreeView",
+          "name": "Jira",
+          "contextualTitle": "Jira Issues",
+          "icon": "$(issue-opened)"
+        },
+        {
+          "id": "confluenceTreeView",
+          "name": "Confluence",
+          "contextualTitle": "Confluence Pages",
+          "icon": "$(book)"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "jira.refreshTree",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "Jira"
+      },
+      {
+        "command": "jira.openIssue",
+        "title": "Open Issue",
+        "icon": "$(go-to-file)",
+        "category": "Jira"
+      },
+      {
+        "command": "jira.openIssueYaml",
+        "title": "Open Issue in YAML Editor",
+        "icon": "$(edit)",
+        "category": "Jira"
+      },
+      {
+        "command": "jira.createIssueYaml",
+        "title": "Create New Issue",
+        "icon": "$(add)",
+        "category": "Jira"
+      },
+      {
+        "command": "jira.saveToJira",
+        "title": "Save to Jira",
+        "icon": "$(cloud-upload)",
+        "category": "Jira"
+      },
+      {
+        "command": "jira.addComment",
+        "title": "Add Comment",
+        "icon": "$(comment)",
+        "category": "Jira"
+      },
+      {
+        "command": "jira.transitionIssue",
+        "title": "Change Status",
+        "icon": "$(arrow-right)",
+        "category": "Jira"
+      },
+      {
+        "command": "confluence.refreshTree",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "Confluence"
+      },
+      {
+        "command": "confluence.openPage",
+        "title": "Open Page",
+        "icon": "$(go-to-file)",
+        "category": "Confluence"
+      },
+      {
+        "command": "confluence.openPageYaml",
+        "title": "Open Page in Editor",
+        "icon": "$(edit)",
+        "category": "Confluence"
+      },
+      {
+        "command": "confluence.createPageYaml",
+        "title": "Create New Page",
+        "icon": "$(add)",
+        "category": "Confluence"
+      },
+      {
+        "command": "confluence.saveToConfluence",
+        "title": "Save to Confluence",
+        "icon": "$(cloud-upload)",
+        "category": "Confluence"
+      },
+      {
+        "command": "confluence.addComment",
+        "title": "Add Comment",
+        "icon": "$(comment)",
+        "category": "Confluence"
+      },
+      {
+        "command": "confluence.deletePage",
+        "title": "Delete Page",
+        "icon": "$(trash)",
+        "category": "Confluence"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "jira.refreshTree",
+          "when": "view == jiraTreeView",
+          "group": "navigation"
+        },
+        {
+          "command": "jira.createIssueYaml",
+          "when": "view == jiraTreeView",
+          "group": "navigation"
+        },
+        {
+          "command": "confluence.refreshTree",
+          "when": "view == confluenceTreeView",
+          "group": "navigation"
+        },
+        {
+          "command": "confluence.createPageYaml",
+          "when": "view == confluenceTreeView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "jira.openIssueYaml",
+          "when": "view == jiraTreeView && viewItem == issue",
+          "group": "inline"
+        },
+        {
+          "command": "jira.addComment",
+          "when": "view == jiraTreeView && viewItem == issue"
+        },
+        {
+          "command": "jira.transitionIssue",
+          "when": "view == jiraTreeView && viewItem == issue"
+        },
+        {
+          "command": "confluence.openPageYaml",
+          "when": "view == confluenceTreeView && viewItem == page",
+          "group": "inline"
+        },
+        {
+          "command": "confluence.addComment",
+          "when": "view == confluenceTreeView && viewItem == page"
+        },
+        {
+          "command": "confluence.deletePage",
+          "when": "view == confluenceTreeView && viewItem == page"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "jira.saveToJira",
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "when": "editorTextFocus && resourceFilename =~ /\\.jira\\.yaml$/"
+      },
+      {
+        "command": "confluence.saveToConfluence",
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "when": "editorTextFocus && resourceFilename =~ /\\.confluence\\.yaml$/"
+      }
+    ],
     "languageModelTools": [
       {
         "name": "getJiraIssue",
@@ -1289,19 +1457,21 @@
     "verify": "ts-node src/scripts/verifyConnectivity.ts",
     "test-jira": "ts-node src/scripts/testJiraTools.ts",
     "test-confluence": "ts-node src/scripts/testConfluenceTools.ts",
-    "test-page": "ts-node src/private_test/testPageOperations.ts",
-    "test-inline": "ts-node src/private_test/testInlineCommentResolve.ts"
+    "test-jira-ui": "ts-node src/scripts/testJiraUI.ts",
+    "test-confluence-ui": "ts-node src/scripts/testConfluenceUI.ts"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.x",
     "@types/vscode": "^1.95.0",
     "@typescript-eslint/eslint-plugin": "^7.x",
     "@typescript-eslint/parser": "^7.x",
     "eslint": "^8.x",
-    "typescript": "^5.x",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "typescript": "^5.x"
   },
   "dependencies": {
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "js-yaml": "^4.1.0"
   }
 }
