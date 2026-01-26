@@ -138,7 +138,8 @@ export class JiraHelper {
                 ...(description && { description: { type: 'doc', version: 1, content: [{ type: 'paragraph', content: [{ type: 'text', text: description }] }] } })
             }
         };
-        return this.request<JiraIssue>('/rest/api/3/issue', 'POST', body);
+        const createResponse = await this.request<{ id: string; key: string; self: string }>('/rest/api/3/issue', 'POST', body);
+        return this.getIssue(createResponse.key);
     }
 
     /**

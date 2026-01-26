@@ -29,7 +29,7 @@ This file provides coding standards and best practices for contributing to the A
 ## Testing Requirements
 
 - Run all reading verification in src/scripts
-- Do not run any create/update/deletion scripts
+- Do not run any create/update/deletion scripts unless explicitly intended
 - Run tests before committing: `npm run verify`
 - Update tests when modifying functionality
 - Add tests for new features when appropriate

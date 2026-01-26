@@ -2,7 +2,7 @@
   "name": "atlassian-tools",
   "displayName": "Atlassian Tools",
   "description": "Manage Jira issues and Confluence pages with integrated UI, YAML editing, and Copilot chat support",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "autoocto",
   "repository": "https://github.com/autoocto/vscode-atlassian-tools",
   "engines": {
@@ -1678,7 +1678,8 @@
     "test-jira": "ts-node src/scripts/testJiraTools.ts",
     "test-confluence": "ts-node src/scripts/testConfluenceTools.ts",
     "test-jira-ui": "ts-node src/scripts/testJiraUI.ts",
-    "test-confluence-ui": "ts-node src/scripts/testConfluenceUI.ts"
+    "test-confluence-ui": "ts-node src/scripts/testConfluenceUI.ts",
+    "test-create-update": "ts-node src/scripts/testCreateAndUpdate.ts"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
