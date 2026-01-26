@@ -69,9 +69,9 @@ Copy `.env.example` to `.env` and fill in your credentials for local development
 
 ## Language Model Tools
 
-This extension provides 37+ language model tools for GitHub Copilot integration:
+This extension provides 45+ language model tools for GitHub Copilot integration:
 
-**Jira Tools (25):**
+**Jira Tools (33):**
 - Issue operations: search (JQL), read, create, update, delete, assign
 - Comments: create, read, update, delete
 - Worklogs: add, read, update, delete
@@ -80,6 +80,16 @@ This extension provides 37+ language model tools for GitHub Copilot integration:
 - Watchers: read, add, remove
 - Attachments and votes: read
 - Bulk operations and metadata
+- **Project Overview:**
+  - Get project summary with metrics and progress
+  - Get all epics with progress tracking
+  - Get project versions (releases)
+  - Get version progress and issue counts
+  - Get project components and statuses
+- **Epic Tracking:**
+  - Get all epics in a project
+  - Get epic details with child issues and progress
+  - Get progress for all epics (bird's eye view)
 
 **Confluence Tools (12):**
 - Page operations: search (CQL), read, create, update, delete

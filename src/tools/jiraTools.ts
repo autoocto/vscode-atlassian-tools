@@ -428,6 +428,178 @@ export function registerJiraTools(context: vscode.ExtensionContext, helper: Jira
         }
     });
 
+    // Get Project Versions Tool
+    const getProjectVersionsTool = vscode.lm.registerTool('getProjectVersions', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ projectKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { projectKey } = options.input;
+            try {
+                const versions = await helper.getProjectVersions(projectKey);
+                return createSuccessResult({ versions, count: versions.length });
+            } catch (error) {
+                return handleToolError(error, `Failed to get versions for project ${projectKey}`);
+            }
+        }
+    });
+
+    // Get Version Progress Tool
+    const getVersionProgressTool = vscode.lm.registerTool('getVersionProgress', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ versionId: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { versionId } = options.input;
+            try {
+                const [version, relatedIssues, unresolvedCount] = await Promise.all([
+                    helper.getVersion(versionId),
+                    helper.getVersionRelatedIssues(versionId),
+                    helper.getVersionUnresolvedIssues(versionId)
+                ]);
+                return createSuccessResult({ version, relatedIssues, unresolvedCount });
+            } catch (error) {
+                return handleToolError(error, `Failed to get progress for version ${versionId}`);
+            }
+        }
+    });
+
+    // Get Project Epics Tool
+    const getProjectEpicsTool = vscode.lm.registerTool('getProjectEpics', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ projectKey: string; maxResults?: number }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { projectKey, maxResults = 50 } = options.input;
+            try {
+                const epics = await helper.getEpics(projectKey, maxResults);
+                const summary = formatJiraIssueSummary(epics);
+                return createSuccessResult({ epics, count: epics.length, summary });
+            } catch (error) {
+                return handleToolError(error, `Failed to get epics for project ${projectKey}`);
+            }
+        }
+    });
+
+    // Get Epic Details and Progress Tool
+    const getEpicProgressTool = vscode.lm.registerTool('getEpicProgress', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ epicKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { epicKey } = options.input;
+            try {
+                const epicDetails = await helper.getEpicDetails(epicKey);
+                const percentComplete = epicDetails.progress.total > 0
+                    ? Math.round((epicDetails.progress.done / epicDetails.progress.total) * 100)
+                    : 0;
+                
+                return createSuccessResult({
+                    epic: formatJiraIssue(epicDetails.epic),
+                    childIssues: formatJiraIssueSummary(epicDetails.childIssues),
+                    progress: {
+                        ...epicDetails.progress,
+                        percentComplete
+                    }
+                });
+            } catch (error) {
+                return handleToolError(error, `Failed to get epic progress for ${epicKey}`);
+            }
+        }
+    });
+
+    // Get Project Summary Tool
+    const getProjectSummaryTool = vscode.lm.registerTool('getProjectSummary', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ projectKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { projectKey } = options.input;
+            try {
+                const summary = await helper.getProjectSummary(projectKey);
+                const percentDone = summary.issueCount.total > 0
+                    ? Math.round((summary.issueCount.done / summary.issueCount.total) * 100)
+                    : 0;
+                
+                return createSuccessResult({
+                    project: summary.project,
+                    issueCount: summary.issueCount,
+                    percentDone,
+                    recentActivity: formatJiraIssueSummary(summary.recentActivity)
+                });
+            } catch (error) {
+                return handleToolError(error, `Failed to get summary for project ${projectKey}`);
+            }
+        }
+    });
+
+    // Get All Epics Progress Tool
+    const getEpicsProgressTool = vscode.lm.registerTool('getEpicsProgress', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ projectKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { projectKey } = options.input;
+            try {
+                const epicsProgress = await helper.getEpicsProgress(projectKey);
+                const formatted = epicsProgress.map(ep => ({
+                    key: ep.epic.key,
+                    summary: ep.epic.fields.summary,
+                    status: ep.epic.fields.status.name,
+                    progress: ep.progress
+                }));
+                
+                return createSuccessResult({
+                    epics: epicsProgress,
+                    summary: formatted,
+                    totalEpics: epicsProgress.length
+                });
+            } catch (error) {
+                return handleToolError(error, `Failed to get epic progress for project ${projectKey}`);
+            }
+        }
+    });
+
+    // Get Project Components Tool
+    const getProjectComponentsTool = vscode.lm.registerTool('getProjectComponents', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ projectKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { projectKey } = options.input;
+            try {
+                const components = await helper.getProjectComponents(projectKey);
+                return createSuccessResult({ components, count: components.length });
+            } catch (error) {
+                return handleToolError(error, `Failed to get components for project ${projectKey}`);
+            }
+        }
+    });
+
+    // Get Project Statuses Tool
+    const getProjectStatusesTool = vscode.lm.registerTool('getProjectStatuses', {
+        async invoke(options: vscode.LanguageModelToolInvocationOptions<{ projectKey: string }>, _token: vscode.CancellationToken) {
+            if (!helper) {
+                return handleToolError(new Error('Jira is not configured'));
+            }
+
+            const { projectKey } = options.input;
+            try {
+                const statuses = await helper.getProjectStatuses(projectKey);
+                return createSuccessResult({ statuses, count: statuses.length });
+            } catch (error) {
+                return handleToolError(error, `Failed to get statuses for project ${projectKey}`);
+            }
+        }
+    });
+
     context.subscriptions.push(
         getJiraIssueTool,
         searchJiraIssuesTool,
@@ -452,6 +624,14 @@ export function registerJiraTools(context: vscode.ExtensionContext, helper: Jira
         assignJiraIssueTool,
         deleteJiraIssueTool,
         getJiraAttachmentsTool,
-        getJiraVotesTool
+        getJiraVotesTool,
+        getProjectVersionsTool,
+        getVersionProgressTool,
+        getProjectEpicsTool,
+        getEpicProgressTool,
+        getProjectSummaryTool,
+        getEpicsProgressTool,
+        getProjectComponentsTool,
+        getProjectStatusesTool
     );
 }

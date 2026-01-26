@@ -726,4 +726,220 @@ export class JiraHelper {
     async removeVote(issueKey: string): Promise<void> {
         await this.request(`/rest/api/3/issue/${issueKey}/votes`, 'DELETE');
     }
+
+    /**
+     * Get project versions (releases)
+     */
+    async getProjectVersions(projectKey: string): Promise<any[]> {
+        return this.request<any[]>(`/rest/api/3/project/${projectKey}/versions`);
+    }
+
+    /**
+     * Get a specific version details
+     */
+    async getVersion(versionId: string): Promise<any> {
+        return this.request<any>(`/rest/api/3/version/${versionId}`);
+    }
+
+    /**
+     * Get version's related issues counts (done, to-do, in-progress)
+     */
+    async getVersionRelatedIssues(versionId: string): Promise<any> {
+        return this.request<any>(`/rest/api/3/version/${versionId}/relatedIssueCounts`);
+    }
+
+    /**
+     * Get unresolved issue count for a version
+     */
+    async getVersionUnresolvedIssues(versionId: string): Promise<any> {
+        return this.request<any>(`/rest/api/3/version/${versionId}/unresolvedIssueCount`);
+    }
+
+    /**
+     * Get all epics in a project
+     */
+    async getEpics(projectKey: string, maxResults: number = 50): Promise<JiraIssue[]> {
+        const jql = `project = "${projectKey}" AND issuetype = Epic ORDER BY created DESC`;
+        const result = await this.searchIssues(jql, maxResults);
+        return result.issues;
+    }
+
+    /**
+     * Get epic details including child issues
+     */
+    async getEpicDetails(epicKey: string): Promise<{
+        epic: JiraIssue;
+        childIssues: JiraIssue[];
+        progress: {
+            total: number;
+            done: number;
+            inProgress: number;
+            toDo: number;
+        };
+    }> {
+        const epic = await this.getIssue(epicKey);
+        
+        // Get all issues in this epic
+        const jql = `"Epic Link" = ${epicKey} OR parent = ${epicKey}`;
+        const childResult = await this.searchIssues(jql, 1000);
+        
+        // Calculate progress
+        let done = 0;
+        let inProgress = 0;
+        let toDo = 0;
+        
+        childResult.issues.forEach(issue => {
+            const status = issue.fields.status.name.toLowerCase();
+            if (status.includes('done') || status.includes('closed') || status.includes('resolved')) {
+                done++;
+            } else if (status.includes('progress') || status.includes('review')) {
+                inProgress++;
+            } else {
+                toDo++;
+            }
+        });
+        
+        return {
+            epic,
+            childIssues: childResult.issues,
+            progress: {
+                total: childResult.issues.length,
+                done,
+                inProgress,
+                toDo
+            }
+        };
+    }
+
+    /**
+     * Get project summary with key metrics
+     */
+    async getProjectSummary(projectKey: string): Promise<{
+        project: any;
+        issueCount: {
+            total: number;
+            done: number;
+            inProgress: number;
+            toDo: number;
+            byType: Record<string, number>;
+            byPriority: Record<string, number>;
+        };
+        recentActivity: JiraIssue[];
+    }> {
+        const project = await this.getProject(projectKey, ['description', 'lead', 'issueTypes']);
+        
+        // Get all issues in project
+        const allIssuesResult = await this.searchIssues(`project = "${projectKey}"`, 1000);
+        
+        // Count by status category
+        let done = 0;
+        let inProgress = 0;
+        let toDo = 0;
+        const byType: Record<string, number> = {};
+        const byPriority: Record<string, number> = {};
+        
+        allIssuesResult.issues.forEach(issue => {
+            const status = issue.fields.status.name.toLowerCase();
+            if (status.includes('done') || status.includes('closed') || status.includes('resolved')) {
+                done++;
+            } else if (status.includes('progress') || status.includes('review')) {
+                inProgress++;
+            } else {
+                toDo++;
+            }
+            
+            // Count by type
+            const type = issue.fields.issuetype?.name || 'Unknown';
+            byType[type] = (byType[type] || 0) + 1;
+            
+            // Count by priority
+            const priority = issue.fields.priority?.name || 'None';
+            byPriority[priority] = (byPriority[priority] || 0) + 1;
+        });
+        
+        // Get recent activity (last 10 updated issues)
+        const recentResult = await this.searchIssues(
+            `project = "${projectKey}" ORDER BY updated DESC`,
+            10
+        );
+        
+        return {
+            project,
+            issueCount: {
+                total: allIssuesResult.issues.length,
+                done,
+                inProgress,
+                toDo,
+                byType,
+                byPriority
+            },
+            recentActivity: recentResult.issues
+        };
+    }
+
+    /**
+     * Get all epics with their progress for a project
+     */
+    async getEpicsProgress(projectKey: string): Promise<Array<{
+        epic: JiraIssue;
+        progress: {
+            total: number;
+            done: number;
+            inProgress: number;
+            toDo: number;
+            percentComplete: number;
+        };
+    }>> {
+        const epics = await this.getEpics(projectKey, 100);
+        
+        const epicsWithProgress = await Promise.all(
+            epics.map(async (epic) => {
+                const details = await this.getEpicDetails(epic.key);
+                const percentComplete = details.progress.total > 0
+                    ? Math.round((details.progress.done / details.progress.total) * 100)
+                    : 0;
+                
+                return {
+                    epic,
+                    progress: {
+                        ...details.progress,
+                        percentComplete
+                    }
+                };
+            })
+        );
+        
+        return epicsWithProgress;
+    }
+
+    /**
+     * Get component details for a project
+     */
+    async getProjectComponents(projectKey: string): Promise<any[]> {
+        return this.request<any[]>(`/rest/api/3/project/${projectKey}/components`);
+    }
+
+    /**
+     * Get issues by component
+     */
+    async getComponentIssues(componentId: string, maxResults: number = 50): Promise<JiraIssue[]> {
+        const jql = `component = ${componentId} ORDER BY updated DESC`;
+        const result = await this.searchIssues(jql, maxResults);
+        return result.issues;
+    }
+
+    /**
+     * Get project roles
+     */
+    async getProjectRoles(projectKey: string): Promise<any> {
+        return this.request<any>(`/rest/api/3/project/${projectKey}/role`);
+    }
+
+    /**
+     * Get statuses for a project
+     */
+    async getProjectStatuses(projectKey: string): Promise<any[]> {
+        return this.request<any[]>(`/rest/api/3/project/${projectKey}/statuses`);
+    }
 }
+

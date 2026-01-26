@@ -2,7 +2,7 @@
   "name": "atlassian-tools",
   "displayName": "Atlassian Tools",
   "description": "Manage Jira issues and Confluence pages with integrated UI, YAML editing, and Copilot chat support",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "publisher": "autoocto",
   "repository": "https://github.com/autoocto/vscode-atlassian-tools",
   "engines": {
@@ -37,6 +37,14 @@
     "onLanguageModelTool:deleteJiraIssue",
     "onLanguageModelTool:getJiraAttachments",
     "onLanguageModelTool:getJiraVotes",
+    "onLanguageModelTool:getProjectVersions",
+    "onLanguageModelTool:getVersionProgress",
+    "onLanguageModelTool:getProjectEpics",
+    "onLanguageModelTool:getEpicProgress",
+    "onLanguageModelTool:getProjectSummary",
+    "onLanguageModelTool:getEpicsProgress",
+    "onLanguageModelTool:getProjectComponents",
+    "onLanguageModelTool:getProjectStatuses",
     "onLanguageModelTool:searchConfluencePages",
     "onLanguageModelTool:getConfluencePage",
     "onLanguageModelTool:createConfluencePage",
@@ -1173,6 +1181,218 @@
           },
           "required": [
             "issueKey"
+          ]
+        }
+      },
+      {
+        "name": "getProjectVersions",
+        "displayName": "Get Project Versions",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getProjectVersions",
+        "modelDescription": "Get all versions (releases) for a Jira project. Useful for release planning and tracking.",
+        "icon": "$(versions)",
+        "tags": [
+          "jira",
+          "project",
+          "versions",
+          "releases"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKey": {
+              "type": "string",
+              "description": "The Jira project key"
+            }
+          },
+          "required": [
+            "projectKey"
+          ]
+        }
+      },
+      {
+        "name": "getVersionProgress",
+        "displayName": "Get Version Progress",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getVersionProgress",
+        "modelDescription": "Get detailed progress information for a specific version including done, in-progress, and to-do issue counts.",
+        "icon": "$(graph)",
+        "tags": [
+          "jira",
+          "version",
+          "progress",
+          "release"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "versionId": {
+              "type": "string",
+              "description": "The version ID (not version name)"
+            }
+          },
+          "required": [
+            "versionId"
+          ]
+        }
+      },
+      {
+        "name": "getProjectEpics",
+        "displayName": "Get Project Epics",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getProjectEpics",
+        "modelDescription": "Get all epics in a Jira project. Epics are large bodies of work that can be broken down into smaller stories.",
+        "icon": "$(milestone)",
+        "tags": [
+          "jira",
+          "project",
+          "epics"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKey": {
+              "type": "string",
+              "description": "The Jira project key"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of epics to return (default: 50)"
+            }
+          },
+          "required": [
+            "projectKey"
+          ]
+        }
+      },
+      {
+        "name": "getEpicProgress",
+        "displayName": "Get Epic Progress",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getEpicProgress",
+        "modelDescription": "Get detailed progress for a specific epic including all child issues and completion percentage. Essential for tracking epic delivery.",
+        "icon": "$(pie-chart)",
+        "tags": [
+          "jira",
+          "epic",
+          "progress",
+          "tracking"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "epicKey": {
+              "type": "string",
+              "description": "The epic issue key"
+            }
+          },
+          "required": [
+            "epicKey"
+          ]
+        }
+      },
+      {
+        "name": "getProjectSummary",
+        "displayName": "Get Project Summary",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getProjectSummary",
+        "modelDescription": "Get comprehensive project overview including total issues, progress metrics, breakdown by type and priority, and recent activity. Perfect for status reports and dashboards.",
+        "icon": "$(dashboard)",
+        "tags": [
+          "jira",
+          "project",
+          "summary",
+          "overview",
+          "metrics"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKey": {
+              "type": "string",
+              "description": "The Jira project key"
+            }
+          },
+          "required": [
+            "projectKey"
+          ]
+        }
+      },
+      {
+        "name": "getEpicsProgress",
+        "displayName": "Get All Epics Progress",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getEpicsProgress",
+        "modelDescription": "Get progress information for all epics in a project. Shows completion percentage for each epic - ideal for high-level project tracking and roadmap status.",
+        "icon": "$(graph-line)",
+        "tags": [
+          "jira",
+          "project",
+          "epics",
+          "progress",
+          "overview"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKey": {
+              "type": "string",
+              "description": "The Jira project key"
+            }
+          },
+          "required": [
+            "projectKey"
+          ]
+        }
+      },
+      {
+        "name": "getProjectComponents",
+        "displayName": "Get Project Components",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getProjectComponents",
+        "modelDescription": "Get all components for a Jira project. Components are subsections of a project used to group issues.",
+        "icon": "$(symbol-namespace)",
+        "tags": [
+          "jira",
+          "project",
+          "components"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKey": {
+              "type": "string",
+              "description": "The Jira project key"
+            }
+          },
+          "required": [
+            "projectKey"
+          ]
+        }
+      },
+      {
+        "name": "getProjectStatuses",
+        "displayName": "Get Project Statuses",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getProjectStatuses",
+        "modelDescription": "Get all available statuses for a Jira project including workflow information.",
+        "icon": "$(list-selection)",
+        "tags": [
+          "jira",
+          "project",
+          "statuses",
+          "workflow"
+        ],
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "projectKey": {
+              "type": "string",
+              "description": "The Jira project key"
+            }
+          },
+          "required": [
+            "projectKey"
           ]
         }
       },
