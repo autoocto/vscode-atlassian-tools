@@ -69,16 +69,16 @@ Copy `.env.example` to `.env` and fill in your credentials for local development
 
 ## Language Model Tools
 
-This extension provides 45+ language model tools for GitHub Copilot integration:
+This extension provides 82+ language model tools for GitHub Copilot integration:
 
-**Jira Tools (33):**
-- Issue operations: search (JQL), read, create, update, delete, assign
+**Jira Tools (44):**
+- Issue operations: search (JQL), read, create, update, delete, assign, bulk fetch
 - Comments: create, read, update, delete
 - Worklogs: add, read, update, delete
 - Transitions: get available, transition issue
-- Issue links: read, create
+- Issue links: read, create, delete
 - Watchers: read, add, remove
-- Attachments and votes: read
+- Attachments and votes: read, add, remove
 - Bulk operations and metadata
 - **Project Overview:**
   - Get project summary with metrics and progress
@@ -86,15 +86,28 @@ This extension provides 45+ language model tools for GitHub Copilot integration:
   - Get project versions (releases)
   - Get version progress and issue counts
   - Get project components and statuses
+  - Get project roles and team members
 - **Epic Tracking:**
   - Get all epics in a project
   - Get epic details with child issues and progress
   - Get progress for all epics (bird's eye view)
+  - Add/remove issues from epics
+- **Version Management:**
+  - Create, update, delete versions
+  - Release and archive versions
+  - Get version-related issues
+- **Component Management:**
+  - Create, update, delete components
+  - Get component issues and counts
 
-**Confluence Tools (12):**
-- Page operations: search (CQL), read, create, update, delete
-- Comments: footer and inline comments (v2 API)
-- Comment operations: create, reply, update, delete, resolve, reopen
+**Confluence Tools (38):**
+- **Page Operations:** search (CQL), read, create, update, delete, copy, move
+- **Page Context:** history, versions, child pages, ancestors, labels, attachments
+- **Comments:** footer and inline comments (v2 API)
+- **Comment Operations:** create, reply, update, delete, resolve, reopen
+- **Space Operations:** get spaces, space details, pages in space
+- **Search Operations:** CQL search, title search, full-text search, Jira key search
+- **User & Metadata:** current user, user search, page watchers
 
 See [package.json](package.json) for full tool definitions and schemas.
 

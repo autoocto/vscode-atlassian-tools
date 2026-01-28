@@ -509,4 +509,151 @@ export class ConfluenceHelper {
         const comment = await this.getInlineComment(commentId);
         return this.updateInlineComment(commentId, comment.body.storage.value, version, 'reopened');
     }
+
+    // ===== SPACE OPERATIONS =====
+
+    /**
+     * Get a specific space by key
+     */
+    async getSpace(spaceKey: string): Promise<any> {
+        return this.request(`/wiki/rest/api/space/${spaceKey}?expand=description.plain,homepage`);
+    }
+
+    /**
+     * Get pages in a space (v2 API)
+     */
+    async getSpacePages(spaceId: string, limit: number = 25, sort?: string): Promise<any> {
+        const params = new URLSearchParams({
+            limit: limit.toString()
+        });
+        if (sort) {
+            params.append('sort', sort);
+        }
+        return this.request(`/wiki/api/v2/spaces/${spaceId}/pages?${params.toString()}`);
+    }
+
+    // ===== PAGE OPERATIONS =====
+
+    /**
+     * Get page version history
+     */
+    async getPageHistory(pageId: string, limit: number = 25): Promise<any> {
+        return this.request(`/wiki/rest/api/content/${pageId}/history?expand=lastUpdated,previousVersion&limit=${limit}`);
+    }
+
+    /**
+     * Get specific version of a page
+     */
+    async getPageVersion(pageId: string, version: number): Promise<any> {
+        return this.request(`/wiki/rest/api/content/${pageId}?status=historical&version=${version}&expand=body.storage,version`);
+    }
+
+    /**
+     * Get child pages of a page
+     */
+    async getChildPages(pageId: string, limit: number = 25): Promise<any> {
+        return this.request(`/wiki/rest/api/content/${pageId}/child/page?expand=version&limit=${limit}`);
+    }
+
+    /**
+     * Get page ancestors (parent pages)
+     */
+    async getPageAncestors(pageId: string): Promise<any> {
+        return this.request(`/wiki/rest/api/content/${pageId}?expand=ancestors`);
+    }
+
+    /**
+     * Get page attachments
+     */
+    async getPageAttachments(pageId: string, limit: number = 25): Promise<any> {
+        return this.request(`/wiki/rest/api/content/${pageId}/child/attachment?expand=version&limit=${limit}`);
+    }
+
+    /**
+     * Get page labels
+     */
+    async getPageLabels(pageId: string): Promise<any> {
+        return this.request(`/wiki/rest/api/content/${pageId}/label`);
+    }
+
+    /**
+     * Add label to a page
+     */
+    async addPageLabel(pageId: string, label: string): Promise<any> {
+        const body = [{ prefix: 'global', name: label }];
+        return this.request(`/wiki/rest/api/content/${pageId}/label`, 'POST', body);
+    }
+
+    /**
+     * Remove label from a page
+     */
+    async removePageLabel(pageId: string, label: string): Promise<void> {
+        await this.request(`/wiki/rest/api/content/${pageId}/label/${label}`, 'DELETE');
+    }
+
+    /**
+     * Move/copy a page
+     */
+    async movePage(pageId: string, targetSpaceKey: string, targetParentId?: string): Promise<any> {
+        const page = await this.getPage(pageId);
+        const body: any = {
+            version: { number: (page.version?.number || 0) + 1 },
+            title: page.title,
+            type: 'page',
+            space: { key: targetSpaceKey }
+        };
+        if (targetParentId) {
+            body.ancestors = [{ id: targetParentId }];
+        }
+        return this.request(`/wiki/rest/api/content/${pageId}`, 'PUT', body);
+    }
+
+    /**
+     * Copy a page to a new location
+     */
+    async copyPage(pageId: string, targetSpaceKey: string, newTitle: string, targetParentId?: string): Promise<ConfluencePage> {
+        const page = await this.getPage(pageId);
+        const content = page.body?.storage?.value || '';
+        return this.createPage(targetSpaceKey, newTitle, content, targetParentId);
+    }
+
+    // ===== SEARCH OPERATIONS =====
+
+    /**
+     * Full-text search across all content
+     */
+    async fullTextSearch(query: string, limit: number = 25): Promise<any> {
+        const cql = `text ~ "${query}" ORDER BY lastmodified DESC`;
+        return this.searchContent(cql, limit);
+    }
+
+    // ===== USER OPERATIONS =====
+
+    /**
+     * Search for users using CQL (requires a search term)
+     * Note: Confluence user search requires CQL query format
+     */
+    async searchUsers(query: string, limit: number = 25): Promise<any[]> {
+        // Confluence Cloud uses CQL for user search
+        // Search using the user's display name
+        const cql = `user.fullname ~ "${query}" OR user.accountId ~ "${query}"`;
+        const params = new URLSearchParams({
+            cql: cql,
+            limit: limit.toString()
+        });
+        try {
+            const result = await this.request<any>(`/wiki/rest/api/search?${params.toString()}`);
+            return result.results || [];
+        } catch {
+            // Fallback to returning empty array if search fails
+            return [];
+        }
+    }
+
+    /**
+     * Get watchers of a page
+     */
+    async getPageWatchers(pageId: string): Promise<any> {
+        return this.request(`/wiki/rest/api/content/${pageId}/notification/child-created`);
+    }
 }

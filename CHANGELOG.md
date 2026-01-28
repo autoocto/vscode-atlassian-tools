@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.4] - 2025-12-07
+### Changed
+- Reorganized Confluence tools into 5 logical groups (38 total tools)
+- Consolidated test scripts: removed obsolete test files, kept comprehensive integration tests
+- Cleaned up package.json scripts to only include active test suites
+
+### Added
+- 21 new Confluence tools: page history, versions, child pages, ancestors, copy/move pages, labels, attachments, space operations, search enhancements, user search, and page watchers
+- Enhanced confluenceHelper with 15+ new methods
+- Comprehensive integration tests for all Confluence tools (37 tests)
+
+### Removed
+- Obsolete test scripts: testJiraTools.ts and testCreateAndUpdate.ts (superseded by integration tests)
+
 ## [0.1.2] - 2025-12-07
 ### Fixed
 - Resolve Jira search API migration by using `/rest/api/3/search/jql` and requesting fields explicitly (`fields=*all`).

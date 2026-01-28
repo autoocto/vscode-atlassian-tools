@@ -647,7 +647,8 @@ export class JiraHelper {
      * Add watcher to an issue
      */
     async addWatcher(issueKey: string, accountId: string): Promise<void> {
-        await this.request(`/rest/api/3/issue/${issueKey}/watchers`, 'POST', `"${accountId}"`);
+        // Jira API expects the accountId as a plain JSON string value
+        await this.request(`/rest/api/3/issue/${issueKey}/watchers`, 'POST', accountId);
     }
 
     /**
@@ -941,6 +942,158 @@ export class JiraHelper {
      */
     async getProjectStatuses(projectKey: string): Promise<any[]> {
         return this.request<any[]>(`/rest/api/3/project/${projectKey}/statuses`);
+    }
+
+    // ===== VERSION MANAGEMENT =====
+
+    /**
+     * Create a new version in a project
+     */
+    async createVersion(projectKey: string, name: string, options?: {
+        description?: string;
+        startDate?: string;
+        releaseDate?: string;
+        released?: boolean;
+        archived?: boolean;
+    }): Promise<any> {
+        // First get the project to get its ID
+        const project = await this.getProject(projectKey);
+        const body: any = {
+            projectId: parseInt(project.id),
+            name,
+            ...options
+        };
+        return this.request('/rest/api/3/version', 'POST', body);
+    }
+
+    /**
+     * Update a version
+     */
+    async updateVersion(versionId: string, fields: {
+        name?: string;
+        description?: string;
+        startDate?: string;
+        releaseDate?: string;
+        released?: boolean;
+        archived?: boolean;
+    }): Promise<any> {
+        return this.request(`/rest/api/3/version/${versionId}`, 'PUT', fields);
+    }
+
+    /**
+     * Delete a version
+     */
+    async deleteVersion(versionId: string, moveFixIssuesTo?: string, moveAffectedIssuesTo?: string): Promise<void> {
+        const params = new URLSearchParams();
+        if (moveFixIssuesTo) {
+            params.append('moveFixIssuesTo', moveFixIssuesTo);
+        }
+        if (moveAffectedIssuesTo) {
+            params.append('moveAffectedIssuesTo', moveAffectedIssuesTo);
+        }
+        const queryString = params.toString();
+        await this.request(`/rest/api/3/version/${versionId}${queryString ? '?' + queryString : ''}`, 'DELETE');
+    }
+
+    /**
+     * Release a version (mark as released)
+     */
+    async releaseVersion(versionId: string): Promise<any> {
+        return this.updateVersion(versionId, { released: true });
+    }
+
+    /**
+     * Archive a version
+     */
+    async archiveVersion(versionId: string): Promise<any> {
+        return this.updateVersion(versionId, { archived: true });
+    }
+
+    // ===== COMPONENT MANAGEMENT =====
+
+    /**
+     * Create a new component in a project
+     */
+    async createComponent(projectKey: string, name: string, options?: {
+        description?: string;
+        leadAccountId?: string;
+        assigneeType?: 'PROJECT_DEFAULT' | 'COMPONENT_LEAD' | 'PROJECT_LEAD' | 'UNASSIGNED';
+    }): Promise<any> {
+        const body: any = {
+            project: projectKey,
+            name,
+            ...options
+        };
+        return this.request('/rest/api/3/component', 'POST', body);
+    }
+
+    /**
+     * Update a component
+     */
+    async updateComponent(componentId: string, fields: {
+        name?: string;
+        description?: string;
+        leadAccountId?: string;
+        assigneeType?: 'PROJECT_DEFAULT' | 'COMPONENT_LEAD' | 'PROJECT_LEAD' | 'UNASSIGNED';
+    }): Promise<any> {
+        return this.request(`/rest/api/3/component/${componentId}`, 'PUT', fields);
+    }
+
+    /**
+     * Delete a component
+     */
+    async deleteComponent(componentId: string, moveIssuesTo?: string): Promise<void> {
+        const params = moveIssuesTo ? `?moveIssuesTo=${moveIssuesTo}` : '';
+        await this.request(`/rest/api/3/component/${componentId}${params}`, 'DELETE');
+    }
+
+    /**
+     * Get a single component by ID
+     */
+    async getComponent(componentId: string): Promise<any> {
+        return this.request(`/rest/api/3/component/${componentId}`);
+    }
+
+    /**
+     * Get count of issues for a component
+     */
+    async getComponentIssueCount(componentId: string): Promise<any> {
+        return this.request(`/rest/api/3/component/${componentId}/relatedIssueCounts`);
+    }
+
+    // ===== EPIC MANAGEMENT (via issue type) =====
+
+    /**
+     * Create an Epic issue
+     */
+    async createEpic(projectKey: string, summary: string, description?: string): Promise<JiraIssue> {
+        return this.createIssue(projectKey, summary, 'Epic', description);
+    }
+
+    /**
+     * Add an issue to an epic (link child to epic)
+     */
+    async addIssueToEpic(epicKey: string, issueKey: string): Promise<void> {
+        // Update the issue's Epic Link field
+        // This requires knowing the custom field ID for Epic Link
+        // A more reliable approach is to use the parent field in next-gen projects
+        await this.updateIssue(issueKey, { parent: { key: epicKey } });
+    }
+
+    /**
+     * Remove an issue from an epic
+     */
+    async removeIssueFromEpic(issueKey: string): Promise<void> {
+        await this.updateIssue(issueKey, { parent: null });
+    }
+
+    /**
+     * Get all issues in an epic
+     */
+    async getEpicIssues(epicKey: string, maxResults: number = 100): Promise<JiraIssue[]> {
+        const jql = `"Epic Link" = ${epicKey} OR parent = ${epicKey}`;
+        const result = await this.searchIssues(jql, maxResults);
+        return result.issues;
     }
 }
 
